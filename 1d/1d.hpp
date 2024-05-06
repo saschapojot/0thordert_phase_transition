@@ -194,7 +194,7 @@ public:
 
 };
 
-class quadraticCubicQudraticDiag: public potentialFunction{
+class quadraticCubicQuarticDiag: public potentialFunction{
     double operator() (const arma::dcolvec& x, const arma::dcolvec & eqPositions)const override{
         arma::dcolvec diff=x-eqPositions;
         double val=0;

@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     UFuncs.push_back(std::make_shared<quadraticDiag>());//0th function: quadratic
     UFuncs.push_back(std::make_shared<quarticCubicDiag>());//1st function: quartic+cubic
     UFuncs.push_back(std::make_shared<pdQuadratic>(dataNum));//2nd function: quadratic form
-    UFuncs.push_back(std::make_shared<quadraticCubicQudraticDiag>());//3rd function: quartic+cubic+quadratic
+    UFuncs.push_back(std::make_shared<quadraticCubicQuarticDiag>());//3rd function: quartic+cubic+quadratic
     UFuncs.push_back(std::make_shared<pdDiagQuadratic>(dataNum));//4th function: same eigenvalues+quadratic form
     auto mc1dObj = mc1d(T, stepSize, dataNum,UFuncs[which]);
     int lag=-1;
