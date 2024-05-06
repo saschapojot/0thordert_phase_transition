@@ -106,11 +106,11 @@ double mc1d::acceptanceRatio(const arma::dcolvec& x,const arma::dcolvec& z){
 //    arma::dcolvec gradf_x=0;//this->gradf(x);
 
 
-    double norm_numerator=arma::norm(x-z,2);
-    double numerator=-f(z)-1.0/(4.0*h)*std::pow(norm_numerator,2);
+//    double norm_numerator=arma::norm(x-z,2);
+    double numerator=-f(z);//-1.0/(4.0*h)*std::pow(norm_numerator,2);
 
-    double norm_denominator=arma::norm(z-x,2);
-    double denominator=-f(x)-1.0/(4.0*h)*std::pow(norm_denominator,2);
+//    double norm_denominator=arma::norm(z-x,2);
+    double denominator=-f(x);//-1.0/(4.0*h)*std::pow(norm_denominator,2);
 
     double ratio=std::exp(numerator-denominator);
 
