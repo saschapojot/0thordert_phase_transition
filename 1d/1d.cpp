@@ -53,7 +53,7 @@ arma::dcolvec mc1d::proposal(const arma::dcolvec& x){
     //0th order update
 
 
-    arma::dcolvec gradVec=this->gradf(x);
+//    arma::dcolvec gradVec=this->gradf(x);
     arma::dcolvec meanVec=x;//-h*gradVec;
     double stddev=std::sqrt(2.0*h);
 
@@ -101,15 +101,15 @@ std::string mc1d::execPython(const char* cmd){
 /// @param z proposed position
 /// @return acceptance ratio
 double mc1d::acceptanceRatio(const arma::dcolvec& x,const arma::dcolvec& z){
+//
+//    arma::dcolvec gradf_z=0;//this->gradf(z);
+//    arma::dcolvec gradf_x=0;//this->gradf(x);
 
-    arma::dcolvec gradf_z=this->gradf(z);
-    arma::dcolvec gradf_x=this->gradf(x);
 
-
-    double norm_numerator=arma::norm(x-z+h*gradf_z,2);
+    double norm_numerator=arma::norm(x-z,2);
     double numerator=-f(z)-1.0/(4.0*h)*std::pow(norm_numerator,2);
 
-    double norm_denominator=arma::norm(z-x+h*gradf_x,2);
+    double norm_denominator=arma::norm(z-x,2);
     double denominator=-f(x)-1.0/(4.0*h)*std::pow(norm_denominator,2);
 
     double ratio=std::exp(numerator-denominator);
