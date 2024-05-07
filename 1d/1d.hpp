@@ -218,6 +218,77 @@ class quadraticCubicQuarticDiag: public potentialFunction{
 
 };
 
+
+class quadraticAbsCubic: public potentialFunction{
+double operator()(const arma::dcolvec& x, const arma::dcolvec & eqPositions)const override{
+    arma::dcolvec diff=x-eqPositions;
+    double val=0;
+    for(int k=0;k<x.size();k++){
+        double diffk=diff(k);
+        val+=std::pow(diffk,2)+6.7*std::abs(std::pow(diffk,3));
+    }
+    return a*val;
+}
+
+arma::dcolvec grad(const arma::dcolvec& x, const arma::dcolvec & eqPositions)const override{
+    arma::dcolvec nulVec=0;
+    return nulVec;
+}
+
+
+};
+
+
+
+class quarticForm:  public potentialFunction{
+public:
+    quarticForm(const int &pntNum){
+        //initialize A matrix
+        A = arma::dmat(pntNum, pntNum);
+        std::seed_seq seq{17, 19, 23};  // Fixed sequence for reproducibility
+        std::ranlux24_base gen;
+        gen.seed(seq);
+        std::uniform_real_distribution<> distr(-1, 1);
+        for (int i = 0; i < pntNum; i++) {
+            for (int j = 0; j < pntNum; j++) {
+                A(i, j) = distr(gen);
+            }
+        }
+        //A to orthogonal
+        B=arma::orth(A);
+//        std::cout<<"BTB="<<B.t()*B<<std::endl;
+        //initialize diagonal matrix
+        std::vector<double> diagElems;
+        for (int j = 0; j < pntNum; j++) {
+            diagElems.push_back(static_cast<double>(j + 1));
+        }
+        //compute pd matrix
+        diag = arma::diagmat(arma::conv_to<arma::colvec>::from(diagElems));
+//        std::cout<<diag<<std::endl;
+        pdmat = B.t() * diag * B;
+//        std::cout<<"det(A)="<<arma::det(A)<<std::endl;
+        std::cout<<"det(pdmat)="<<arma::det(pdmat)<<std::endl;
+    }//end of constructor
+
+    double operator() (const arma::dcolvec& x, const arma::dcolvec & eqPositions)const override{
+        arma::dcolvec diff=x-eqPositions;
+        arma::dcolvec diff2=arma::pow(diff,2);
+        double val=arma::dot(diff2,0.5*pdmat*diff2);
+        return val;
+
+    }
+    arma::dcolvec grad(const arma::dcolvec& x, const arma::dcolvec & eqPositions)const override{
+        arma::dcolvec nulVec=0;
+        return nulVec;
+    }
+
+
+    arma::dmat A;
+    arma::dmat B;
+    arma::dmat diag;
+    arma::dmat pdmat;
+};
+
 class mc1d {
 public:mc1d(double temperature,double stepSize,int pntNum, const std::shared_ptr<potentialFunction>& funcPtr ){
         this->T=temperature;
