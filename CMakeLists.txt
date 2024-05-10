@@ -12,6 +12,8 @@ include_directories("/home/polya/cppLocal/armadillo/include")
 add_executable(run1d run1d.cpp 1d/1d.cpp)
 add_executable(genA genA.cpp)
 
+add_executable(runV1LJ2Atom runV1LJ2Atom.cpp version1/LJPot/version1LJPot2Atom.cpp)
+
 set_source_files_properties(
         1d/1d.cpp
         PROPERTIES
@@ -19,6 +21,12 @@ set_source_files_properties(
         COMPILE_OPTIONS "-O3"
 )
 
+set_source_files_properties(
+        version1/LJPot/version1LJPot2Atom.cpp
+        PROPERTIES
+
+        COMPILE_OPTIONS "-O3"
+)
 
 set(Boost_NO_SYSTEM_PATHS YES)
 if (Boost_NO_SYSTEM_PATHS)
@@ -44,6 +52,10 @@ endif()
 file(GLOB LIBS_SO "/home/polya/cppLocal/armadillo/lib/*.so")
 target_link_libraries(run1d ${LIBS_SO})
 target_link_libraries(genA ${LIBS_SO})
+target_link_libraries(runV1LJ2Atom ${LIBS_SO})
 
 target_link_libraries(run1d Boost::serialization)
 target_link_libraries(run1d Boost::filesystem)
+
+target_link_libraries(runV1LJ2Atom Boost::serialization)
+target_link_libraries(runV1LJ2Atom Boost::filesystem)
