@@ -143,7 +143,7 @@ void version1dLJPot2Atom::readEqMc(int& lag,int &loopTotal,bool &equilibrium, bo
     std::string TStr = sObjT.str();
     std::string  funcName= demangle(typeid(*potFuncPtr).name());
 
-    std::string outDir="./version1/1d/func"+funcName+"/T"+TStr+"/";
+    std::string outDir="./version1Data/1d/func"+funcName+"/T"+TStr+"/";
 
     std::string outUAllSubDir=outDir+"UAll/";
     std::string out_xA_AllSubDir=outDir+"xA_All/";
@@ -364,7 +364,7 @@ void version1dLJPot2Atom::executionMCAfterEq(const int& lag,const int & loopEq,c
     std::string TStr = sObjT.str();
     std::string  funcName= demangle(typeid(*potFuncPtr).name());
 
-    std::string outDir="./version1/1d/func"+funcName+"/T"+TStr+"/";
+    std::string outDir="./version1Data/1d/func"+funcName+"/T"+TStr+"/";
 
     std::string outUAllSubDir=outDir+"UAll/";
     std::string out_xA_AllSubDir=outDir+"xA_All/";
