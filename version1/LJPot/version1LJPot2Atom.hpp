@@ -35,7 +35,7 @@ namespace fs = boost::filesystem;
 class potentialFunction{
     //base class for potential function
 public:
-    virtual double operator() (const arma::dcolvec& x, const arma::dcolvec & eqPositions)const=0;
+    virtual double operator() (const arma::dcolvec& xA, const arma::dcolvec & xB)const=0;
     virtual ~ potentialFunction(){};
 
 };
@@ -195,11 +195,30 @@ public:
     /// @param same whether all values of potential are the same
     /// @param xALast last positions of atom A
     /// @param xBLast last positions of atom B
-    void readEqMc(int& lag,int &loopTotal,bool &equilibrium, bool &same, arma::dcolvec& xALast,arma::dcolvec& xBLast);
+    void readEqMc(int& lag,int &loopTotal,bool &equilibrium, bool &same, std::vector<double>& xALast,std::vector<double>& xBLast);
 
+    ///
+    /// @param lag decorrelation length
+    /// @param loopEq total loop numbers in reaching equilibrium
+    /// @param xA_init xA from readEqMc
+    /// @param xB_init xB from readEqMc
+    void executionMCAfterEq(const int& lag,const int & loopEq,const std::vector<double>& xA_init,const std::vector<double>& xB_init);
 
+    std::string demangle(const char* name) {
+        int status = -1;
+        char* demangled = abi::__cxa_demangle(name, NULL, NULL, &status);
+        std::string result(name);
+        if (status == 0) {
+            result = demangled;
+        }
+        std::free(demangled);
+        return result;
+    }
 
-
+    ///
+    /// @param rowNum row number
+    static void parseCSV(const int& rowNum,double &alpha1,double& beta1, double& p1,double&q1,
+                         double &alpha2,double&beta2,double & p2, double& q2);
 
     double T;// temperature
     double beta;
