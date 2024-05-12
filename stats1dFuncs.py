@@ -384,7 +384,7 @@ def diagnosticsAndStats(oneTFile):
         axx.set_xticks(xTicks)
         axx.set_ylabel("#")
         axx.set_xlabel("position")
-        xHistOut="T"+str(TTmp)+"xHist.pdf"
+    xHistOut="T"+str(TTmp)+"xHist.pdf"
     plt.subplots_adjust(hspace=x_vertical_distance)
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
