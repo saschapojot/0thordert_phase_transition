@@ -129,8 +129,9 @@ public:
 
 class version1dLJPot2Atom {
 public:
-    version1dLJPot2Atom(double temperature, double stepSize, int cellNum,
+    version1dLJPot2Atom(int rowNum,double temperature, double stepSize, int cellNum,
                         const std::shared_ptr<potentialFunction> &funcPtr) {
+        this->rowNum=rowNum;
         this->T = temperature;
         this->beta = 1 / T;
         this->h = stepSize;
@@ -180,7 +181,10 @@ public:
     double acceptanceRatio(const arma::dcolvec& xA,const arma::dcolvec& xB,
                            const arma::dcolvec& zA,const arma::dcolvec& zB);
 
-
+    ///
+    /// @param xAInit initial positions of A
+    /// @param xBInit initial positions of B
+    void initPositionsEquiDistance(arma::dcolvec &xAInit,arma::dcolvec &xBInit);
 
     ///
     /// @param filename  xml file name of vecvec
@@ -233,6 +237,7 @@ public:
     double lastFileNum = 0;
     std::shared_ptr<potentialFunction> potFuncPtr;
     double stddev;
+    int rowNum;
 
 
 };
