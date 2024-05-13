@@ -10,21 +10,21 @@ from pathlib import Path
 from multiprocessing import Pool
 from datetime import datetime
 import pandas as pd
+from copy import deepcopy
 
 #this script computes statistics for 1d for each function, plots evolution
 
 moveNumInOneFlush=3000
 
-pathData="./1ddata/"
+pathData="../../version1Data/1d/"
 
-# funcNames=[]
 funcFileNames=[]
 TValsForAllFuncs=[]
 TFileNamesForAllFuncs=[]
 sortedTFilesForAllFuncs=[]
 sortedTValsForAllFuncs=[]
 
-for funcfile in glob.glob(pathData+"/funcquarticForm*"):
+for funcfile in glob.glob(pathData+"/funcLJPot*"):
     #first search a values
     funcFileNames.append(funcfile)
     # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
@@ -41,6 +41,7 @@ for funcfile in glob.glob(pathData+"/funcquarticForm*"):
     TFileNamesForAllFuncs.append(TFilesTmp)
     TValsForAllFuncs.append(TValsTmp)
 
+
 #sort T files for each func
 for j in range(0,len(funcFileNames)):
     T_indsTmp=np.argsort(TValsForAllFuncs[j])
@@ -51,9 +52,6 @@ for j in range(0,len(funcFileNames)):
     TFilesTmp=TFileNamesForAllFuncs[j]
     sortedTFilesTmp=[TFilesTmp[i] for i in T_indsTmp]
     sortedTFilesForAllFuncs.append(sortedTFilesTmp)
-
-
-
 
 
 def parseSummaryBeforeEq(summaryFile):
@@ -104,6 +102,8 @@ def searchsummaryAfterEqFile(oneTFile):
     return file
 
 
+
+
 def parseAfterEqFile(oneTFile):
     """
 
@@ -129,9 +129,8 @@ def UAndxFilesSelected(oneTFile):
     """
 
     :param oneTFile: one T directory
-    :return: U files and x files to be parsed
+    :return: U files and xA, xB files to be parsed
     """
-
     smrFile=oneTFile+"/summary.txt"
     same, loopNumBeforeEq,lag,lastFileNum=parseSummaryBeforeEq(smrFile)
     fileAfterEqList,loopNumAfterEq=parseAfterEqFile(oneTFile)
@@ -146,37 +145,53 @@ def UAndxFilesSelected(oneTFile):
             fileNumSelected=lastFileNum
 
     UAllDir=oneTFile+"/UAll/*.xml"
-    xAllDir=oneTFile+"/xAll/*.xml"
-
+    xA_AllDir=oneTFile+"/xA_All/*.xml"
+    xB_AllDir=oneTFile+"/xB_All/*.xml"
     inUAllFileNames=[]
     startUAllVals=[]
+
     for file in glob.glob(UAllDir):
         inUAllFileNames.append(file)
         matchUStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
         if matchUStart:
             startUAllVals.append(int(matchUStart.group(1)))
 
+
     start_U_inds=np.argsort(startUAllVals)
 
     sortedUAllFileNames=[inUAllFileNames[ind] for ind in start_U_inds]
 
 
-    inxAllFileNames=[]
-    startxAllVals=[]
-    for file in glob.glob(xAllDir):
-        inxAllFileNames.append(file)
-        matchxAllStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
-        if matchxAllStart:
-            startxAllVals.append(int(matchxAllStart.group(1)))
+    inxA_AllFileNames=[]
+    startxA_AllVals=[]
 
-    start_xAll_inds=np.argsort(startxAllVals)
-    sortedxAllFileNames=[inxAllFileNames[ind] for ind in start_xAll_inds]
+    for file in glob.glob(xA_AllDir):
+        inxA_AllFileNames.append(file)
+        matchxA_AllStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
+        if matchxA_AllStart:
+            startxA_AllVals.append(int(matchxA_AllStart.group(1)))
+
+
+    start_xA_All_inds=np.argsort(startxA_AllVals)
+    sortedxA_AllFileNames=[inxA_AllFileNames[ind] for ind in start_xA_All_inds]
+
+    inxB_AllFileNames=[]
+    startxB_AllVals=[]
+    for file in glob.glob(xB_AllDir):
+        inxB_AllFileNames.append(file)
+        matchxB_AllStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
+        if matchxB_AllStart:
+            startxB_AllVals.append(int(matchxB_AllStart.group(1)))
+
+
+    start_xB_All_inds=np.argsort(startxB_AllVals)
+    sortedxB_AllFileNames=[inxB_AllFileNames[ind] for ind in start_xB_All_inds]
 
     retUAllFileNames=sortedUAllFileNames[-fileNumSelected:]
-    retxAllFileNames=sortedxAllFileNames[-fileNumSelected:]
+    retxA_AllFileNames=sortedxA_AllFileNames[-fileNumSelected:]
+    retxB_AllFileNames=sortedxB_AllFileNames[-fileNumSelected:]
 
-
-    return same, retUAllFileNames,retxAllFileNames,lag,fileNumSelected
+    return same, retUAllFileNames,retxA_AllFileNames,retxB_AllFileNames,lag,fileNumSelected
 
 
 
@@ -198,6 +213,7 @@ def parseUFile(UFileName):
     return vecValsAll
 
 
+
 def parsexFile(xFileName):
     """
 
@@ -215,29 +231,35 @@ def parsexFile(xFileName):
     return np.array(vectors)
 
 
+
+
 def combineValues(oneTFile):
     """
 
     :param oneTFile: corresponds to one temperature
-    :return: combined values of U and x from each file, names of the parsed files
+    :return: combined values of U and xA, xB from each file, names of the parsed files
     """
-    same, retUAllFileNames,retxAllFileNames,lag,fileNumSelected=UAndxFilesSelected(oneTFile)
-
+    same, retUAllFileNames,retxA_AllFileNames,retxB_AllFileNames,lag,fileNumSelected=UAndxFilesSelected(oneTFile)
 
     UVecValsCombined=parseUFile(retUAllFileNames[0])
-
     for file in retUAllFileNames[1:]:
         UVecValsCombined+=parseUFile(file)
 
-    xVecVecCombined=parsexFile(retxAllFileNames[0])
+
+    xA_VecVecCombined=parsexFile(retxA_AllFileNames[0])
+    for file in retxA_AllFileNames[1:]:
+        xA_VecVecNext=parsexFile(file)
+
+        xA_VecVecCombined=np.r_[xA_VecVecCombined,xA_VecVecNext]
 
 
-    for file in retxAllFileNames[1:]:
-        xVecVecNext=parsexFile(file)
+    xB_VecVecCombined=parsexFile(retxB_AllFileNames[0])
+    for file in retxB_AllFileNames[1:]:
+        xB_VecVecNext=parsexFile(file)
 
-        xVecVecCombined=np.r_[xVecVecCombined,xVecVecNext]
+        xB_VecVecCombined=np.r_[xB_VecVecCombined,xB_VecVecNext]
 
-    return same, UVecValsCombined,xVecVecCombined,lag,fileNumSelected
+    return same, UVecValsCombined,xA_VecVecCombined,xB_VecVecCombined,lag,fileNumSelected
 
 
 def meanAndVarForScalar(vec):
@@ -255,8 +277,6 @@ def meanAndVarForScalar(vec):
 
 
 outRoot=pathData
-
-
 def diagnosticsAndStats(oneTFile):
     """
 
@@ -267,24 +287,17 @@ def diagnosticsAndStats(oneTFile):
     TTmpMatch=re.search(r"T(\d+(\.\d+)?)",oneTFile)
     if TTmpMatch:
         TTmp=float(TTmpMatch.group(1))
-    same, UVecValsCombined,xVecVecCombined,lag,fileNumSelected=combineValues(oneTFile)
-
+    same, UVecValsCombined,xA_VecVecCombined,xB_VecVecCombined,lag,fileNumSelected=combineValues(oneTFile)
     ##############diagnostics: not identical values ################################################################
     if same==0:
         #diagnostics for U
-
-
-
         USelected=UVecValsCombined[::lag]
-
 
         meanU=np.mean(USelected)
         varU=np.var(USelected,ddof=1)
         sigmaU=np.sqrt(varU)
         # print("varU="+str(varU))
         hfIntervalU=1.96*np.sqrt(varU/len(USelected))
-
-
 
         #diagnostics of U
         nbins=500
@@ -311,6 +324,7 @@ def diagnosticsAndStats(oneTFile):
         plt.savefig(oneTFile+"/"+EHistOut)
 
         plt.close()
+
         ### test normal distribution for mean U
         USelectedAll=USelected
 
@@ -325,7 +339,7 @@ def diagnosticsAndStats(oneTFile):
 
         fig=plt.figure(figsize=(20,20))
         fig.tight_layout(pad=5.0)
-        lengthVals=[10,20,50,100]
+        lengthVals=[5,10,20,40]
         for i in range(0,len(lengthVals)):
             l=lengthVals[i]
             UMeanBlk=meanPerBlock(l)
@@ -344,62 +358,73 @@ def diagnosticsAndStats(oneTFile):
         # plt.savefig(EBlkMeanDir+"/T"+str(TTmp)+"EBlk.png")
         plt.close()
 
-        plt.figure()
+    #diagnostics of xA, xB
+    xA_VecVecSelected=xA_VecVecCombined[::lag,:]
+    xA_ValsForEachPosition=[]
+    _,nColx=xA_VecVecSelected.shape
 
-    #diagnostics of x
-    xVecVecSelected=xVecVecCombined[::lag,:]
-    xValsForEachPosition=[]
-    _,nColx=xVecVecSelected.shape
+    xB_VecVecSelected=xB_VecVecCombined[::lag,:]
+    xB_ValsForEachPosition=[]
+
+    #xA_VecVecSelected and xB_VecVecSelected have the same shape
+
+    #take centers of xA and xB
+
+    xACentered=deepcopy(xA_VecVecSelected)
+    xAMeans=xACentered.mean(axis=1,keepdims=True)
+    # xACentered=xACentered-xAMeans
+
+    xBCentered=deepcopy(xB_VecVecSelected)
+    xBMeans=xBCentered.mean(axis=1,keepdims=True)
+    # xBCentered=xBCentered-xBMeans
+
     for j in range(0,nColx):
-        xFor1Point=xVecVecSelected[:,j]
-        xValsForEachPosition.append(xFor1Point)
+        xAFor1Point=xACentered[:,j]
+        xA_ValsForEachPosition.append(xAFor1Point)
+
+        xBFor1Point=xBCentered[:,j]
+        xB_ValsForEachPosition.append(xBFor1Point)
+
+
 
     fig=plt.figure(figsize=(20,160))
     fig.tight_layout(pad=5.0)
     x_vertical_distance = 0.9
-    xTicks=list(np.arange(0,nColx))
-    # inTxt="./tmp.txt"
-    # df=pd.read_csv(inTxt,header=None)
-    # B=df.to_numpy()
-    xMeanAll=[]
+    xAMeanAll=[]
+    xBMeanAll=[]
     for j in range(0,nColx):
         axx=fig.add_subplot(nColx,1,j+1,sharex=axx if j != 0 else None)
-        xValsTmp=xValsForEachPosition[j]
-        xMeanTmp=np.mean(xValsTmp)
-        xMeanAll.append(xMeanTmp)
-        xVarTmp=np.var(xValsTmp,ddof=1)
-        xSigmaTmp=np.sqrt(xVarTmp)
-        xHfInterval=1.96*np.sqrt(xVarTmp/len(xValsTmp))
+        #plot A
+        xAValsTmp=xA_ValsForEachPosition[j]
+        xAMeanTmp=np.mean(xAValsTmp)
+        xAMeanAll.append(xAMeanTmp)
+        xAVarTmp=np.var(xAValsTmp,ddof=1)
+        xASigmaTmp=np.sqrt(xAVarTmp)
         nbins=500
-        (n,_,_)=axx.hist(xValsTmp,bins=nbins)
-        xMeanTmp=np.round(xMeanTmp,4)
-        xSigmaTmp=np.round(xSigmaTmp,4)
-        hPosText=(np.max(xValsTmp)-np.min(xVarTmp))*1/7+np.min(xValsTmp)
-        vPosText=np.max(n)*3/4
-        axx.set_title("position "+str(j)+", T="+str(np.round(TTmp,3)))
-        plt.axvline(x=xMeanTmp,color="red",label="mean")
-        axx.text(xMeanTmp*1.1,0.5*np.max(n),str(xMeanTmp)+"$\pm$"+str(xSigmaTmp),color="red")
-        # axx.hlines(y=0,xmin=xMeanTmp-xHfInterval,xmax=xMeanTmp+xHfInterval,color="green",linewidth=15)
-        plt.legend(loc="best")
-        axx.set_xticks(xTicks)
+        (nA,_,_)=axx.hist(xAValsTmp,bins=nbins,color = "blue", ec="blue")
+        xAMeanTmp=np.round(xAMeanTmp,4)
+        xASigmaTmp=np.round(xASigmaTmp,4)
+        axx.set_title("Unit cell "+str(j)+", T="+str(np.round(TTmp,3)))
+        plt.axvline(x=xAMeanTmp,color="red",label="mean A")
+        axx.text(xAMeanTmp*1.1,0.5*np.max(nA),str(xAMeanTmp)+"$\pm$"+str(xASigmaTmp),color="red")
+
+        #plot B
+        xBValsTmp=xB_ValsForEachPosition[j]
+        xBMeanTmp=np.mean(xBValsTmp)
+        xBMeanAll.append(xBMeanTmp)
+        xBVarTmp=np.var(xBValsTmp,ddof=1)
+        xBSigmaTmp=np.sqrt(xBVarTmp)
+        nbins=500
+        (nB,_,_)=axx.hist(xBValsTmp,bins=nbins,color = "green", ec="green")
+        plt.axvline(x=xBMeanTmp,color="magenta",label="mean B")
+        axx.text(xBMeanTmp*1.1,0.5*np.max(nB),str(xBMeanTmp)+"$\pm$"+str(xBSigmaTmp),color="magenta")
         axx.set_ylabel("#")
         axx.set_xlabel("position")
     xHistOut="T"+str(TTmp)+"xHist.pdf"
+
     plt.subplots_adjust(hspace=x_vertical_distance)
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
-    xMeanAll=np.array(xMeanAll)
-    # y=B@xMeanAll
-    # print(y)
-
-
-
-
-
-
-
-
-
 
 
 
