@@ -93,6 +93,9 @@ public:
     /// @return the sum of all V2 energy under OBC
     double V2Total(const arma::dcolvec& xA, const arma::dcolvec & xB)const{
     int N=xB.size();
+    if (N<=1){
+        return 0;
+    }
     arma::dcolvec sliceA=xA.subvec(1,N-1);
 //    std::cout<<"sliceA="<<sliceA<<std::endl;
     arma::dcolvec sliceB=xB.subvec(0,N-2);

@@ -16,7 +16,7 @@ from copy import deepcopy
 
 moveNumInOneFlush=3000
 
-pathData="../../version1Data/1d/"
+pathData="../../version1Data/1d/row0/funcLJPot/"
 
 funcFileNames=[]
 TValsForAllFuncs=[]
@@ -24,7 +24,7 @@ TFileNamesForAllFuncs=[]
 sortedTFilesForAllFuncs=[]
 sortedTValsForAllFuncs=[]
 
-for funcfile in glob.glob(pathData+"/funcLJPot*"):
+for funcfile in glob.glob(pathData+"/initstd::string*"):
     #first search a values
     funcFileNames.append(funcfile)
     # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
@@ -240,24 +240,31 @@ def combineValues(oneTFile):
     :return: combined values of U and xA, xB from each file, names of the parsed files
     """
     same, retUAllFileNames,retxA_AllFileNames,retxB_AllFileNames,lag,fileNumSelected=UAndxFilesSelected(oneTFile)
-
+    tReadUStart=datetime.now()
     UVecValsCombined=parseUFile(retUAllFileNames[0])
     for file in retUAllFileNames[1:]:
         UVecValsCombined+=parseUFile(file)
+    tReadUEnd=datetime.now()
+    print("reading U time: ",tReadUEnd-tReadUStart)
 
-
+    tReadAStart=datetime.now()
     xA_VecVecCombined=parsexFile(retxA_AllFileNames[0])
     for file in retxA_AllFileNames[1:]:
         xA_VecVecNext=parsexFile(file)
 
         xA_VecVecCombined=np.r_[xA_VecVecCombined,xA_VecVecNext]
 
+    tReadAEnd=datetime.now()
+    print("reading A time: ",tReadAEnd-tReadAStart)
 
+    tReadBStart=datetime.now()
     xB_VecVecCombined=parsexFile(retxB_AllFileNames[0])
     for file in retxB_AllFileNames[1:]:
         xB_VecVecNext=parsexFile(file)
 
         xB_VecVecCombined=np.r_[xB_VecVecCombined,xB_VecVecNext]
+    tReadBEnd=datetime.now()
+    print("reading B time: ",tReadBEnd-tReadBStart)
 
     return same, UVecValsCombined,xA_VecVecCombined,xB_VecVecCombined,lag,fileNumSelected
 
