@@ -24,7 +24,7 @@ TFileNamesForAllFuncs=[]
 sortedTFilesForAllFuncs=[]
 sortedTValsForAllFuncs=[]
 
-for funcfile in glob.glob(pathData+"/funcpdDiagQuadratic*"):
+for funcfile in glob.glob(pathData+"/funcquarticForm*"):
     #first search a values
     funcFileNames.append(funcfile)
     # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
