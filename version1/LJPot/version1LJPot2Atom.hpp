@@ -201,6 +201,10 @@ public:
     /// @param vecvec vector<vector> to be saved
     static void saveVecVecToXML(const std::string &filename,const std::vector<std::vector<double>> &vecvec);
 
+    ///
+    /// @param filename bin file name of vecvec
+    /// @param vecvec vector<vector> to be saved
+    static void saveVecVecToBin(const std::string &filename,const std::vector<std::vector<double>> &vecvec);
 
     ///
     /// @param lag decorrelation length
