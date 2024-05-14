@@ -24,7 +24,7 @@ TFileNamesForAllFuncs=[]
 sortedTFilesForAllFuncs=[]
 sortedTValsForAllFuncs=[]
 
-for funcfile in glob.glob(pathData+"/initstd::string*"):
+for funcfile in glob.glob(pathData+"/*"):
     #first search a values
     funcFileNames.append(funcfile)
     # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
@@ -40,7 +40,7 @@ for funcfile in glob.glob(pathData+"/initstd::string*"):
 
     TFileNamesForAllFuncs.append(TFilesTmp)
     TValsForAllFuncs.append(TValsTmp)
-
+print(funcFileNames)
 
 #sort T files for each func
 for j in range(0,len(funcFileNames)):

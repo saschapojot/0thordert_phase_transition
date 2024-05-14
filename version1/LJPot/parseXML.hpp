@@ -42,12 +42,31 @@ public:
         return idx;
     }
 
+    template<class T>
+    static void printVec(const std::vector <T> &vec) {
+        for (int i = 0; i < vec.size() - 1; i++) {
+            std::cout << vec[i] << ",";
+        }
+        std::cout << vec[vec.size() - 1] << std::endl;
+    }
+
     ///sort files by starting loop
     void sortFiles();
 
 
 
     void parseSummary();
+
+    std::string searchSummaryAfterEq();
+
+    void parseSummaryAfterEq(const std::string &afterEqPath);
+
+    void UAndxFilesSelected();
+
+
+    void parseUFiles();
+
+    void parsexAxB();
 
 
 
@@ -64,9 +83,21 @@ public:
     double T = 0;
     double beta = 0;
     int moveNumInOneFlush=3000;
+    int loopNumAfterEq=0;
+    std::vector <std::string> UFilesSelected;
+    std::vector <std::string> xAFilesSelected;
+    std::vector <std::string> xBFilesSelected;
+
     std::vector <std::vector<double>> xASelected;
     std::vector <std::vector<double>> xBSelected;
-    std::vector<double> ESelected;
+    std::vector<double> USelected;
+
+
+    arma::dcolvec armaU;
+
+    std::vector <std::vector<double>> xAIn;
+    std::vector <std::vector<double>> xBIn;
+    std::vector<double> UIn;
 
     std::vector <std::string> UFilesAll;
     std::vector <std::string> xAFilesAll;
@@ -74,6 +105,8 @@ public:
     std::vector <std::string> sorted_UFilesAll;
     std::vector <std::string> sorted_xAFilesAll;
     std::vector <std::string> sorted_xBFilesAll;
+    int loopNumToInclude;
+    int fileNumSelected;
 
 
 };

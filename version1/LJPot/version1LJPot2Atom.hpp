@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <msgpack.hpp>
 #include <random>
 #include <regex>
 #include <sstream>
@@ -79,8 +80,9 @@ public:
 
         arma::dcolvec vecPart1=alpha1*arma::pow(rVec,-p1);
         arma::dcolvec vecPart2=-beta1*arma::pow(rVec,-q1);
+        arma::dcolvec vecPart3=arma::pow(rVec,4);
 
-        double val=arma::sum(vecPart1)+arma::sum(vecPart2);
+        double val=arma::sum(vecPart1)+arma::sum(vecPart2)+arma::sum(vecPart3);
 //        std::cout<<"V1Total="<<val<<std::endl;
         return val;
 
@@ -106,8 +108,9 @@ public:
 
     arma::dcolvec vecPart1=alpha2*arma::pow(rVec,-p2);
     arma::dcolvec vecPart2=-beta2*arma::pow(rVec,-q2);
+        arma::dcolvec vecPart3=arma::pow(rVec,4);
 
-    double val=arma::sum(vecPart1)+arma::sum(vecPart2);
+    double val=arma::sum(vecPart1)+arma::sum(vecPart2)+arma::sum(vecPart3);
 //        std::cout<<"V2Total="<<val<<std::endl;
 
         return val;
@@ -169,6 +172,10 @@ public:
     ///@param vec vector to be saved
     static  void saveVecToXML(const std::string &filename,const std::vector<double> &vec);
 
+    ///
+    /// @param filename bin file name of vec
+    /// @param vec vector to be saved
+    static void saveVecToBin(const std::string &filename,const std::vector<double> &vec);
     ///
     /// @param cmd python execution string
     /// @return signal from the python

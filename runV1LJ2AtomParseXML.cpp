@@ -26,14 +26,14 @@ std::vector<std::string> scanFiles(const int& rowNum){
 
 
 int main(int argc, char *argv[]) {
-    if(argc!=2){
-        std::cerr<<"wrong number of arguments"<<std::endl;
+    if (argc != 2) {
+        std::cerr << "wrong number of arguments" << std::endl;
         exit(1);
     }
-    int rowNum=std::stoi(argv[1]);
+    int rowNum = std::stoi(argv[1]);
 
     std::vector<std::string> TDirs = scanFiles(rowNum);
-    for (const auto& s:TDirs) {
+    for (const auto &s: TDirs) {
 //        std::cout<<"file is "<<s<<std::endl;
         const auto tCStart{std::chrono::steady_clock::now()};
         auto rd = reader(rowNum, s);
@@ -41,6 +41,12 @@ int main(int argc, char *argv[]) {
         rd.sortFiles();
 
         rd.parseSummary();
+        std::string smrAfterEq = rd.searchSummaryAfterEq();
+        rd.parseSummaryAfterEq(smrAfterEq);
+        rd.UAndxFilesSelected();
+        rd.parseUFiles();
+        rd.parsexAxB();
 
     }
+
 }

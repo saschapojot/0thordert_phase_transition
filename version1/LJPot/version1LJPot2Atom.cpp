@@ -20,8 +20,9 @@ void version1dLJPot2Atom::proposal(const arma::dcolvec &xACurr, const arma::dcol
                                    arma::dcolvec &zANext, arma::dcolvec &zBNext) {
     std::random_device rd;
     std::ranlux24_base gen(rd());
-
-    for (int j = 0; j < N; j++) {
+    //fix left end (0A)
+    zANext(0)=xACurr(0);
+    for (int j = 1; j < N; j++) {
         std::normal_distribution<double> dTmp(xACurr(j), stddev);
         zANext(j) = dTmp(gen);
     }
@@ -147,6 +148,11 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     std::string out_xA_AllSubDir = outDir + "xA_All/";
     std::string out_xB_AllSubDir = outDir + "xB_All/";
 
+
+    std::string outUAllBinSubDir = outDir + "UAllBin/";
+    std::string out_xA_AllBinSubDir = outDir + "xA_AllBin/";
+    std::string out_xB_AllBinSubDir = outDir + "xB_AllBin/";
+
     if (!fs::is_directory(outUAllSubDir) || !fs::exists(outUAllSubDir)) {
         fs::create_directories(outUAllSubDir);
     }
@@ -155,6 +161,16 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         fs::create_directories(out_xA_AllSubDir);
     }
 
+    if (!fs::is_directory(out_xB_AllSubDir) || !fs::exists(out_xB_AllSubDir)) {
+        fs::create_directories(out_xB_AllSubDir);
+    }
+    if (!fs::is_directory(outUAllBinSubDir) || !fs::exists(outUAllBinSubDir)) {
+        fs::create_directories(outUAllBinSubDir);
+    }
+
+    if (!fs::is_directory(out_xA_AllBinSubDir) || !fs::exists(out_xA_AllBinSubDir)) {
+        fs::create_directories(out_xA_AllBinSubDir);
+    }
     if (!fs::is_directory(out_xB_AllSubDir) || !fs::exists(out_xB_AllSubDir)) {
         fs::create_directories(out_xB_AllSubDir);
     }
@@ -217,7 +233,9 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
 
         std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
+        std::string outUBinFileName=outUAllBinSubDir+filenameMiddle+"UAll.bin";
         this->saveVecToXML(outUFileName, UAllPerFlush);
+        this->saveVecToBin(outUBinFileName,UAllPerFlush);
 
         std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
         this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
@@ -500,6 +518,28 @@ void version1dLJPot2Atom::initPositionsEquiDistance(arma::dcolvec &xAInit, arma:
         xAInit(n) = a * nDB * 2.0;
         xBInit(n) = a * (2.0 * nDB + 1);
     }
+
+
+}
+
+
+///
+/// @param filename bin file name of vec
+/// @param vec vector to be saved
+void version1dLJPot2Atom::saveVecToBin(const std::string &filename,const std::vector<double> &vec){
+    std::stringstream buffer;
+    msgpack::pack(buffer,vec);
+    std::string const& serialized_data = buffer.str();
+
+    std::ofstream outfile(filename, std::ios::binary);
+    if (outfile.is_open()) {
+        outfile.write(serialized_data.data(), serialized_data.size());
+        outfile.close();
+
+    } else {
+        std::cerr << "Unable to open file for writing "<<filename << std::endl;
+    }
+
 
 
 }
