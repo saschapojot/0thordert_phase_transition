@@ -11,6 +11,7 @@
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/json.hpp>
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/vector.hpp>
 

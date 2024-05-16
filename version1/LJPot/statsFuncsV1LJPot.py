@@ -16,7 +16,7 @@ from copy import deepcopy
 
 moveNumInOneFlush=3000
 
-pathData="../../version1Data/1d/row0/funcLJPot/"
+pathData="../../version1Data/1d/row0/"
 
 funcFileNames=[]
 TValsForAllFuncs=[]
@@ -40,7 +40,7 @@ for funcfile in glob.glob(pathData+"/*"):
 
     TFileNamesForAllFuncs.append(TFilesTmp)
     TValsForAllFuncs.append(TValsTmp)
-print(funcFileNames)
+# print(funcFileNames)
 
 #sort T files for each func
 for j in range(0,len(funcFileNames)):

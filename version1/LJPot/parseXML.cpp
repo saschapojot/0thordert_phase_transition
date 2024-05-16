@@ -201,7 +201,7 @@ void reader::parseUFiles() {
 //    std::cout<<"lag="<<lag<<std::endl;
 //    std::cout<<"len(UIn)="<<UIn.size()<<std::endl;
 //    std::cout<<"len(USelected)="<<USelected.size()<<std::endl;
-    armaU= arma::dcolvec (USelected);
+//    armaU= arma::dcolvec (USelected);
 
 //    std::cout<<armaU<<std::endl;
 
@@ -247,6 +247,10 @@ void reader::parsexAxB(){
     arma_xA=((arma::dmat (xASelectedFlat)).reshape(cellNum,counterA)).t();
 
 
+//    std::cout<<"T="<<std::to_string(T)<<std::endl;
+//    std::cout<<"A size=("<<arma_xA.n_rows<<", "<<arma_xA.n_cols<<")"<<std::endl;
+
+
 
 
     //B
@@ -267,6 +271,10 @@ void reader::parsexAxB(){
 
     arma_xB=((arma::dmat (xBSelectedFlat)).reshape(cellNum,counterA)).t();
 
+
+//    arma::drowvec meanB=arma::mean(arma_xB,0);
+//    std::cout<<"B size=("<<arma_xB.n_rows<<", "<<arma_xB.n_cols<<")"<<std::endl;
+//    std::cout<<"-------------------------"<<std::endl;
 }
 
 
@@ -322,6 +330,68 @@ std::vector<std::vector<double>> reader::readMsgBinVecVec(const std::string& fil
 
     return nested_vec;
 
+
+
+}
+
+
+
+///data to json, json as input to plot
+void reader::data2json() {
+
+    std::string jsonPath = this->TDir + "/jsonData/";
+
+    //write U
+    std::string UJsonPath = jsonPath + "/jsonU/";
+    if (!fs::is_directory(UJsonPath) || !fs::exists(UJsonPath)) {
+        fs::create_directories(UJsonPath);
+    }
+
+    std::string UJsonFile = UJsonPath + "/UData.json";
+
+    boost::json::object objU;
+    boost::json::array arrU;
+    for (const auto &val: USelected) {
+        arrU.push_back(val);
+    }
+    objU["U"] = arrU;
+    std::ofstream ofsU(UJsonFile);
+    std::string UStr = boost::json::serialize(objU);
+    ofsU << UStr << std::endl;
+    ofsU.close();
+
+
+    //write xA, xB
+    for (int i = 0; i < cellNum; i++) {
+        std::string cellPathTmp = jsonPath + "jsonUnitCell" + std::to_string(i) + "/";
+        if (!fs::is_directory(cellPathTmp) || !fs::exists(cellPathTmp)) {
+            fs::create_directories(cellPathTmp);
+        }
+        boost::json::object obj_xAxB;
+
+        std::string cellJsonFile = cellPathTmp + "xAxBData.json";
+
+        arma::dcolvec colA = arma_xA.col(i);
+        boost::json::array oneCol_xA;
+        for (const auto &val: colA) {
+            oneCol_xA.push_back(val);
+        }
+        arma::dcolvec colB = arma_xB.col(i);
+        boost::json::array oneCol_xB;
+        for (const auto &val: colB) {
+            oneCol_xB.push_back(val);
+        }
+        obj_xAxB["xA"] = oneCol_xA;
+
+        obj_xAxB["xB"] = oneCol_xB;
+
+        std::ofstream ofsxAxB(cellJsonFile);
+        std::string xAxBStr = boost::json::serialize(obj_xAxB);
+        ofsxAxB << xAxBStr << std::endl;
+        ofsxAxB.close();
+
+
+    }
 
 
 }

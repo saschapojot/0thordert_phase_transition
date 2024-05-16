@@ -12,6 +12,7 @@ class reader{
 public:
     reader(const int &rowNum, const std::string &TDir){
         this->rowNum=rowNum;
+
         this->TDir ="./version1Data/1d/row"+std::to_string(rowNum)+"/funcLJPot/"+TDir;
         std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
         std::smatch T_match;
@@ -79,6 +80,9 @@ public:
 
     void parsexAxB();
 
+    ///data to json, json as input to plot
+    void data2json();
+
 
 
 
@@ -89,6 +93,8 @@ public:
     std::string UPath;
     std::string xAPath;
     std::string xBPath;
+
+
     int lag = 0;
     int lastFileNum = 0;
     double T = 0;
@@ -105,7 +111,7 @@ public:
     std::vector<double> USelected;
 
 
-    arma::dcolvec armaU;
+//    arma::dcolvec armaU;
     arma::dmat arma_xA;
     arma::dmat  arma_xB;
 

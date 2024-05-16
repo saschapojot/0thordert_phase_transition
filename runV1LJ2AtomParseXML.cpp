@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
         rd.UAndxFilesSelected();
         rd.parseUFiles();
         rd.parsexAxB();
+        rd.data2json();
 
     }
 
