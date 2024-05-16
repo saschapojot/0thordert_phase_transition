@@ -145,6 +145,10 @@ def plt_xAxB(oneTFile):
     fig=plt.figure(figsize=(20,160))
     fig.tight_layout(pad=5.0)
     x_vertical_distance = 0.9
+    xAMeanAll=[]
+    xASdAll=[]
+    xBMeanAll=[]
+    xBSdAll=[]
     unitCellNum=len(sortedPathForAUnitCell)
     for j in range(0,unitCellNum):
         onePath=sortedPathForAUnitCell[j]
@@ -159,13 +163,18 @@ def plt_xAxB(oneTFile):
         axx=fig.add_subplot(unitCellNum,1,j+1,sharex=axx if j != 0 else None)
 
         xAMean=np.mean(xAVec)
+        xAMeanAll.append(xAMean)
         xBMean=np.mean(xBVec)
+        xBMeanAll.append(xBMean)
 
         xAVar=np.var(xAVec,ddof=1)
+
         xBVar=np.var(xBVec,ddof=1)
 
         xASigma=np.sqrt(xAVar)
+        xASdAll.append(xASigma)
         xBSigma=np.sqrt(xBVar)
+        xBSdAll.append(xBSigma)
 
         nbins=500
         #plot A
@@ -190,6 +199,31 @@ def plt_xAxB(oneTFile):
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
 
+    plt.figure()
+    plt.ylim(-1, 1)
+
+
+    for i in range(0,len(xAMeanAll)):
+        plt.hlines(y=0,xmin=xAMeanAll[i]-xASdAll[i],xmax=xAMeanAll[i]+xASdAll[i],color="red",linewidth=2,alpha=0.2)
+        plt.text(xAMeanAll[i],0.3,str(i)+"A",color="blue", ha='center')
+        plt.text(xAMeanAll[i],-0.1,str(np.round(xAMeanAll[i],4)),color="blue", ha='center',fontsize=8)
+
+    plt.scatter(xAMeanAll,[0]*len(xAMeanAll),color="blue",s=8,label="A")
+
+
+    for i in range(0,len(xBMeanAll)):
+        plt.hlines(y=0,xmin=xBMeanAll[i]-xBSdAll[i],xmax=xBMeanAll[i]+xBSdAll[i],color="magenta",linewidth=2,alpha=0.2)
+        plt.text(xBMeanAll[i],0.3,str(i)+"B",color="green", ha='center')
+        plt.text(xBMeanAll[i],-0.1,str(np.round(xBMeanAll[i],4)),color="green", ha='center',fontsize=8)
+
+    plt.scatter(xBMeanAll,[0]*len(xBMeanAll),color="green",s=8,label="B")
+    plt.legend(loc="best")
+    plt.gca().get_yaxis().set_visible(False)
+    plt.axhline(y=0, color='black', linewidth=0.5,alpha=0.3)
+    gridOut="T"+str(TVal)+"grid.pdf"
+    plt.savefig(oneTFile+"/"+gridOut)
+
+    plt.close()
 
 
 
