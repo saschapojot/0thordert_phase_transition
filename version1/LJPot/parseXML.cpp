@@ -34,7 +34,7 @@ void reader::searchFiles() {
 ///
 /// @param path the path containing xml files
 /// @return sorted xml files by starting loop
-std::vector <std::string> reader::sortOneDir(const std::vector <std::string> &allFiles){
+std::vector<std::string> reader::sortOneDir(const std::vector<std::string> &allFiles) {
     std::vector<int> startingLoopsAll;
     for (const std::string &name: allFiles) {
         std::regex startPattern("loopStart(\\d+)loopEnd");
@@ -45,9 +45,9 @@ std::vector <std::string> reader::sortOneDir(const std::vector <std::string> &al
 
     }
 
-    std::vector <size_t> inds = this->argsort<int>(startingLoopsAll);;
+    std::vector<size_t> inds = this->argsort<int>(startingLoopsAll);;
 
-    std::vector <std::string> sortedFiles;
+    std::vector<std::string> sortedFiles;
     for (const auto &i: inds) {
         sortedFiles.push_back(allFiles[i]);
     }
@@ -59,19 +59,17 @@ std::vector <std::string> reader::sortOneDir(const std::vector <std::string> &al
 
 
 ///sort files by starting loop
-void reader::sortFiles(){
+void reader::sortFiles() {
     this->sorted_UFilesAll = this->sortOneDir(this->UFilesAll);
-    this->sorted_xAFilesAll=this->sortOneDir(this->xAFilesAll);
-    this->sorted_xBFilesAll=this->sortOneDir(this->xBFilesAll);
-
-
+    this->sorted_xAFilesAll = this->sortOneDir(this->xAFilesAll);
+    this->sorted_xBFilesAll = this->sortOneDir(this->xBFilesAll);
 
 
 }
 
 
-void reader::parseSummary(){
-    std::string smrPath=TDir+"/summary.txt";
+void reader::parseSummary() {
+    std::string smrPath = TDir + "/summary.txt";
     std::regex lagPattern("lag=([+-]?\\d+)");
     std::regex lastFilesNumPattern("lastFileNum=(\\d+)");
 
@@ -80,11 +78,11 @@ void reader::parseSummary(){
 
 
     std::ifstream smrIn(smrPath);
-    for(std::string line; std::getline(smrIn,line);){
+    for (std::string line; std::getline(smrIn, line);) {
         //extract lag value
         if (std::regex_search(line, matchLag, lagPattern)) {
             this->lag = std::stoi(matchLag.str(1));
-//            std::cout<<"lag="<<lag<<std::endl;
+            std::cout << "lag=" << lag << std::endl;
         }
         //extract lastFilesNum
         if (std::regex_search(line, matchFileNum, lastFilesNumPattern)) {
@@ -100,10 +98,10 @@ void reader::parseSummary(){
 
 }
 
-std::string reader::searchSummaryAfterEq(){
+std::string reader::searchSummaryAfterEq() {
 
-std::regex afterEqPattern("summaryAfterEq");
-std::smatch matchAfter;
+    std::regex afterEqPattern("summaryAfterEq");
+    std::smatch matchAfter;
 
     for (const auto &entry: fs::directory_iterator(this->TDir)) {
         std::string fileName = entry.path().string();
@@ -120,15 +118,15 @@ std::smatch matchAfter;
 
 }
 
-void reader::parseSummaryAfterEq(const std::string &afterEqPath){
+void reader::parseSummaryAfterEq(const std::string &afterEqPath) {
 
-    std::regex  loopPattern("total loop number:\\s*(\\d+)");
-    std::smatch  matchLoop;
-    if (afterEqPath.size()>0){
+    std::regex loopPattern("total loop number:\\s*(\\d+)");
+    std::smatch matchLoop;
+    if (afterEqPath.size() > 0) {
         std::ifstream afterIn(afterEqPath);
-        for(std::string line;std::getline(afterIn,line);){
+        for (std::string line; std::getline(afterIn, line);) {
             if (std::regex_search(line, matchLoop, loopPattern)) {
-                this->loopNumAfterEq=std::stoi(matchLoop.str(1));
+                this->loopNumAfterEq = std::stoi(matchLoop.str(1));
 //                std::cout<<"loopNumAfterEq="<<loopNumAfterEq<<std::endl;
                 break;
 
@@ -142,33 +140,29 @@ void reader::parseSummaryAfterEq(const std::string &afterEqPath){
 }
 
 
-
-void reader::UAndxFilesSelected(){
-    loopNumToInclude=moveNumInOneFlush*lastFileNum+loopNumAfterEq;
+void reader::UAndxFilesSelected() {
+    loopNumToInclude = moveNumInOneFlush * lastFileNum + loopNumAfterEq;
 //    std::cout<<"loopNumToInclude="<<loopNumToInclude<<std::endl;
- double loopNumToIncludeDB=static_cast<double >(loopNumToInclude);
- double moveNumInOneFlushDB=static_cast<double >(moveNumInOneFlush);
+    double loopNumToIncludeDB = static_cast<double >(loopNumToInclude);
+    double moveNumInOneFlushDB = static_cast<double >(moveNumInOneFlush);
 
- fileNumSelected=static_cast<int>(std::ceil(loopNumToIncludeDB/moveNumInOneFlushDB));
+    fileNumSelected = static_cast<int>(std::ceil(loopNumToIncludeDB / moveNumInOneFlushDB));
 //    std::cout<<"fileNumSelected="<<fileNumSelected<<std::endl;
 
 
- for(int i=sorted_UFilesAll.size()-fileNumSelected;i<sorted_UFilesAll.size();i++){
-     this->UFilesSelected.push_back(sorted_UFilesAll[i]);
- }
+    for (int i = sorted_UFilesAll.size() - fileNumSelected; i < sorted_UFilesAll.size(); i++) {
+        this->UFilesSelected.push_back(sorted_UFilesAll[i]);
+    }
 // std::cout<<"fileNumSelected="<<fileNumSelected<<std::endl;
 // std::cout<<"len(UFilesSelected)="<<UFilesSelected.size()<<std::endl;
 
-for(int i=sorted_xAFilesAll.size()-fileNumSelected;i<sorted_xAFilesAll.size();i++){
-    this->xAFilesSelected.push_back(sorted_xAFilesAll[i]);
-}
-
-    for(int i=sorted_xBFilesAll.size()-fileNumSelected;i<sorted_xBFilesAll.size();i++){
-        this->xBFilesSelected.push_back(sorted_xBFilesAll[i]);
+    for (int i = sorted_xAFilesAll.size() - fileNumSelected; i < sorted_xAFilesAll.size(); i++) {
+        this->xAFilesSelected.push_back(sorted_xAFilesAll[i]);
     }
 
-
-
+    for (int i = sorted_xBFilesAll.size() - fileNumSelected; i < sorted_xBFilesAll.size(); i++) {
+        this->xBFilesSelected.push_back(sorted_xBFilesAll[i]);
+    }
 
 
 }
@@ -176,8 +170,9 @@ for(int i=sorted_xAFilesAll.size()-fileNumSelected;i<sorted_xAFilesAll.size();i+
 
 void reader::parseUFiles() {
     const auto tUStart{std::chrono::steady_clock::now()};
+    UIn.reserve(this->UFilesSelected.size() * moveNumInOneFlush);
     for (const std::string &oneUFile: this->UFilesSelected) {
-        std::vector<double> vecInOneFile= readMsgBinVec(oneUFile);
+        std::vector<double> vecInOneFile = readMsgBinVec(oneUFile);
 //        std::ifstream ifs(oneUFile);
 //        if (!ifs.is_open()) {
 //            std::cerr << "cannot open " << oneUFile << std::endl;
@@ -195,7 +190,7 @@ void reader::parseUFiles() {
     const std::chrono::duration<double> elapsed_secondsAll{tUEnd - tUStart};
     std::cout << "parse U time: " << elapsed_secondsAll.count() << " s" << std::endl;
 
-    for(int i=0;i<UIn.size();i+=lag){
+    for (int i = 0; i < UIn.size(); i += lag + 1) {
         USelected.push_back(UIn[i]);
     }
 //    std::cout<<"lag="<<lag<<std::endl;
@@ -209,15 +204,28 @@ void reader::parseUFiles() {
 }
 
 
-
-
-void reader::parsexAxB(){
+void reader::parsexAxB() {
 
     //A
     const auto tAStart{std::chrono::steady_clock::now()};
+    //reserve lengths
+    std::vector<std::vector<double>> zerothVecVec = readMsgBinVecVec(xAFilesSelected[0]);
 
-    for(const std::string &onexAFile: xAFilesSelected){
-        std::vector<std::vector<double>> vecVecInOneFile= readMsgBinVecVec(onexAFile);
+    cellNum = zerothVecVec[0].size();
+    std::cout << "cellNum=" << cellNum << std::endl;
+    xAIn.reserve(moveNumInOneFlush * xAFilesSelected.size());
+    std::vector<double> initVecVal(cellNum, 0);
+    for (int i = 0; i < moveNumInOneFlush * xAFilesSelected.size(); i++) {
+        xAIn.push_back(initVecVal);
+    }
+    xBIn.reserve(moveNumInOneFlush * xAFilesSelected.size());
+    for (int i = 0; i < moveNumInOneFlush * xAFilesSelected.size(); i++) {
+        xBIn.push_back(initVecVal);
+    }
+    int AStart = 0;
+
+    for (const std::string &onexAFile: xAFilesSelected) {
+        std::vector<std::vector<double>> vecVecInOneFile = readMsgBinVecVec(onexAFile);
 //    std::ifstream ifs(onexAFile);
 //        if (!ifs.is_open()) {
 //            std::cerr << "cannot open "<<onexAFile << std::endl;
@@ -227,24 +235,28 @@ void reader::parsexAxB(){
 //        ia >> BOOST_SERIALIZATION_NVP(vecVecInOneFile);
 //
 
-        xAIn.insert(xAIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
-
+//        xAIn.insert(xAIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
+        int lengthTmp = vecVecInOneFile.size();
+        for (int i = AStart; i < AStart + lengthTmp; i++) {
+            xAIn[i] = vecVecInOneFile[i - AStart];
+        }
+        AStart += lengthTmp;
 
     }
-    cellNum=xAIn[0].size();
+
 //    std::cout<<"cellNum="<<cellNum<<std::endl;
 
     const auto tAEnd{std::chrono::steady_clock::now()};
     const std::chrono::duration<double> A_elapsed_secondsAll{tAEnd - tAStart};
     std::cout << "parse A time: " << A_elapsed_secondsAll.count() << " s" << std::endl;
 
-    int counterA=0;
-    for(int i=0;i<xAIn.size();i+=lag){
+    int counterA = 0;
+    for (int i = 0; i < xAIn.size(); i += lag + 1) {
 //        xASelected.push_back(xAIn[i]);
-    xASelectedFlat.insert(xASelectedFlat.end(),xAIn[i].begin(),xAIn[i].end());
-    counterA++;
+        xASelectedFlat.insert(xASelectedFlat.end(), xAIn[i].begin(), xAIn[i].end());
+        counterA++;
     }
-    arma_xA=((arma::dmat (xASelectedFlat)).reshape(cellNum,counterA)).t();
+    arma_xA = ((arma::dmat(xASelectedFlat)).reshape(cellNum, counterA)).t();
 
 
 //    std::cout<<"T="<<std::to_string(T)<<std::endl;
@@ -254,10 +266,16 @@ void reader::parsexAxB(){
 
 
     //B
+    int BStart = 0;
     const auto tBStart{std::chrono::steady_clock::now()};
-    for(const std::string &onexBFile: xBFilesSelected){
-        std::vector<std::vector<double>> vecVecInOneFile= readMsgBinVecVec(onexBFile);
-        xBIn.insert(xBIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
+    for (const std::string &onexBFile: xBFilesSelected) {
+        std::vector<std::vector<double>> vecVecInOneFile = readMsgBinVecVec(onexBFile);
+//        xBIn.insert(xBIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
+        int lengthTmp = vecVecInOneFile.size();
+        for (int i = BStart; i < BStart + lengthTmp; i++) {
+            xBIn[i] = vecVecInOneFile[i - BStart];
+        }
+        BStart += lengthTmp;
 
     }
 
@@ -265,11 +283,11 @@ void reader::parsexAxB(){
     const std::chrono::duration<double> B_elapsed_secondsAll{tBEnd - tBStart};
     std::cout << "parse B time: " << B_elapsed_secondsAll.count() << " s" << std::endl;
 
-    for(int i=0;i<xBIn.size();i+=lag){
-        xBSelectedFlat.insert(xBSelectedFlat.end(),xBIn[i].begin(),xBIn[i].end());
+    for (int i = 0; i < xBIn.size(); i += lag + 1) {
+        xBSelectedFlat.insert(xBSelectedFlat.end(), xBIn[i].begin(), xBIn[i].end());
     }
 
-    arma_xB=((arma::dmat (xBSelectedFlat)).reshape(cellNum,counterA)).t();
+    arma_xB = ((arma::dmat(xBSelectedFlat)).reshape(cellNum, counterA)).t();
 
 
 //    arma::drowvec meanB=arma::mean(arma_xB,0);
@@ -281,7 +299,7 @@ void reader::parsexAxB(){
 ///
 /// @param filename bin file name
 /// @return vector
-std::vector<double> reader::readMsgBinVec(const std::string& filename){
+std::vector<double> reader::readMsgBinVec(const std::string &filename) {
     std::ifstream infile(filename, std::ios::binary);
     if (!infile.is_open()) {
         throw std::runtime_error("Unable to open file for reading");
@@ -302,13 +320,12 @@ std::vector<double> reader::readMsgBinVec(const std::string& filename){
     return vec;
 
 
-
 }
 
 ///
 /// @param filename bin file name
 /// @return vector<vector<double>>
-std::vector<std::vector<double>> reader::readMsgBinVecVec(const std::string& filename){
+std::vector<std::vector<double>> reader::readMsgBinVecVec(const std::string &filename) {
 
 // Step 1: Read the binary data from the file
     std::ifstream infile(filename, std::ios::binary);
@@ -331,9 +348,7 @@ std::vector<std::vector<double>> reader::readMsgBinVecVec(const std::string& fil
     return nested_vec;
 
 
-
 }
-
 
 
 ///data to json, json as input to plot

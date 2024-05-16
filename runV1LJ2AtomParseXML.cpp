@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<std::string> TDirs = scanFiles(rowNum);
     for (const auto &s: TDirs) {
-//        std::cout<<"file is "<<s<<std::endl;
+        std::cout<<"file is "<<s<<std::endl;
         const auto tCStart{std::chrono::steady_clock::now()};
         auto rd = reader(rowNum, s);
         rd.searchFiles();

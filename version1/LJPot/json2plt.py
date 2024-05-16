@@ -199,7 +199,7 @@ def plt_xAxB(oneTFile):
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
 
-    plt.figure()
+    plt.figure(figsize=(12, 6))
     plt.ylim(-1, 1)
 
 
@@ -213,8 +213,8 @@ def plt_xAxB(oneTFile):
 
     for i in range(0,len(xBMeanAll)):
         plt.hlines(y=0,xmin=xBMeanAll[i]-xBSdAll[i],xmax=xBMeanAll[i]+xBSdAll[i],color="magenta",linewidth=2,alpha=0.2)
-        plt.text(xBMeanAll[i],0.3,str(i)+"B",color="green", ha='center')
-        plt.text(xBMeanAll[i],-0.1,str(np.round(xBMeanAll[i],4)),color="green", ha='center',fontsize=8)
+        plt.text(xBMeanAll[i],0.1,str(i)+"B",color="green", ha='center')
+        plt.text(xBMeanAll[i],-0.3,str(np.round(xBMeanAll[i],4)),color="green", ha='center',fontsize=8)
 
     plt.scatter(xBMeanAll,[0]*len(xBMeanAll),color="green",s=8,label="B")
     plt.legend(loc="best")

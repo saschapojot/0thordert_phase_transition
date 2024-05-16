@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
     auto LJFunc=LJPot(alpha1,alpha2,beta1,beta2,p1,p2,q1,q2);
 
     double  h=0.005;
-    int cellNum = 2;
+    int cellNum = 10;
     auto v1Obj=version1dLJPot2Atom(rowNum,T,h,cellNum,std::make_shared<LJPot>(alpha1,alpha2,beta1,beta2,p1,p2,q1,q2));
-    int lag=-1;
+    int lag=0;
     int totalLoopEq=0;
     bool eq=false;
     bool same= false;
