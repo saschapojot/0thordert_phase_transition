@@ -6,9 +6,12 @@
 ///UAll, xA_All, xB_All folder's files
 void reader::searchFiles() {
 
-    this->UPath = this->TDir + "/UAll/";
-    this->xAPath = this->TDir + "/xA_All/";
-    this->xBPath = this->TDir + "/xB_All/";
+//    this->UPath = this->TDir + "/UAll/";
+    this->UPath = this->TDir + "/UAllBin/";
+//    this->xAPath = this->TDir + "/xA_All/";
+    this->xAPath = this->TDir + "/xA_AllBin/";
+//    this->xBPath = this->TDir + "/xB_All/";
+    this->xBPath = this->TDir + "/xB_AllBin/";
 //    std::cout<<UPath<<std::endl;
 //    std::cout<<xAPath<<std::endl;
 //    std::cout<<xAPath<<std::endl;
@@ -174,14 +177,14 @@ for(int i=sorted_xAFilesAll.size()-fileNumSelected;i<sorted_xAFilesAll.size();i+
 void reader::parseUFiles() {
     const auto tUStart{std::chrono::steady_clock::now()};
     for (const std::string &oneUFile: this->UFilesSelected) {
-        std::vector<double> vecInOneFile;
-        std::ifstream ifs(oneUFile);
-        if (!ifs.is_open()) {
-            std::cerr << "cannot open " << oneUFile << std::endl;
-            return;
-        }
-        boost::archive::xml_iarchive ia(ifs);
-        ia >> BOOST_SERIALIZATION_NVP(vecInOneFile);
+        std::vector<double> vecInOneFile= readMsgBinVec(oneUFile);
+//        std::ifstream ifs(oneUFile);
+//        if (!ifs.is_open()) {
+//            std::cerr << "cannot open " << oneUFile << std::endl;
+//            return;
+//        }
+//        boost::archive::xml_iarchive ia(ifs);
+//        ia >> BOOST_SERIALIZATION_NVP(vecInOneFile);
 
         UIn.insert(UIn.end(), vecInOneFile.begin(), vecInOneFile.end());
 
@@ -214,23 +217,110 @@ void reader::parsexAxB(){
     const auto tAStart{std::chrono::steady_clock::now()};
 
     for(const std::string &onexAFile: xAFilesSelected){
-        std::vector<std::vector<double>> vecVecInOneFile;
-    std::ifstream ifs(onexAFile);
-        if (!ifs.is_open()) {
-            std::cerr << "cannot open "<<onexAFile << std::endl;
-            return;
-        }
-        boost::archive::xml_iarchive ia(ifs);
-        ia >> BOOST_SERIALIZATION_NVP(vecVecInOneFile);
+        std::vector<std::vector<double>> vecVecInOneFile= readMsgBinVecVec(onexAFile);
+//    std::ifstream ifs(onexAFile);
+//        if (!ifs.is_open()) {
+//            std::cerr << "cannot open "<<onexAFile << std::endl;
+//            return;
+//        }
+//        boost::archive::xml_iarchive ia(ifs);
+//        ia >> BOOST_SERIALIZATION_NVP(vecVecInOneFile);
+//
+
         xAIn.insert(xAIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
 
 
     }
+    cellNum=xAIn[0].size();
+//    std::cout<<"cellNum="<<cellNum<<std::endl;
 
     const auto tAEnd{std::chrono::steady_clock::now()};
     const std::chrono::duration<double> A_elapsed_secondsAll{tAEnd - tAStart};
     std::cout << "parse A time: " << A_elapsed_secondsAll.count() << " s" << std::endl;
 
+    int counterA=0;
+    for(int i=0;i<xAIn.size();i+=lag){
+//        xASelected.push_back(xAIn[i]);
+    xASelectedFlat.insert(xASelectedFlat.end(),xAIn[i].begin(),xAIn[i].end());
+    counterA++;
+    }
+    arma_xA=((arma::dmat (xASelectedFlat)).reshape(cellNum,counterA)).t();
+
+
+
+
+    //B
+    const auto tBStart{std::chrono::steady_clock::now()};
+    for(const std::string &onexBFile: xBFilesSelected){
+        std::vector<std::vector<double>> vecVecInOneFile= readMsgBinVecVec(onexBFile);
+        xBIn.insert(xBIn.end(),vecVecInOneFile.begin(),vecVecInOneFile.end());
+
+    }
+
+    const auto tBEnd{std::chrono::steady_clock::now()};
+    const std::chrono::duration<double> B_elapsed_secondsAll{tBEnd - tBStart};
+    std::cout << "parse B time: " << B_elapsed_secondsAll.count() << " s" << std::endl;
+
+    for(int i=0;i<xBIn.size();i+=lag){
+        xBSelectedFlat.insert(xBSelectedFlat.end(),xBIn[i].begin(),xBIn[i].end());
+    }
+
+    arma_xB=((arma::dmat (xBSelectedFlat)).reshape(cellNum,counterA)).t();
+
+}
+
+
+///
+/// @param filename bin file name
+/// @return vector
+std::vector<double> reader::readMsgBinVec(const std::string& filename){
+    std::ifstream infile(filename, std::ios::binary);
+    if (!infile.is_open()) {
+        throw std::runtime_error("Unable to open file for reading");
+    }
+
+    std::stringstream buffer;
+    buffer << infile.rdbuf();
+    std::string serialized_data = buffer.str();
+    infile.close();
+
+    // Step 2: Deserialize the binary data using MessagePack
+    msgpack::object_handle oh = msgpack::unpack(serialized_data.data(), serialized_data.size());
+    msgpack::object obj = oh.get();
+
+    std::vector<double> vec;
+    obj.convert(vec);
+
+    return vec;
+
+
+
+}
+
+///
+/// @param filename bin file name
+/// @return vector<vector<double>>
+std::vector<std::vector<double>> reader::readMsgBinVecVec(const std::string& filename){
+
+// Step 1: Read the binary data from the file
+    std::ifstream infile(filename, std::ios::binary);
+    if (!infile.is_open()) {
+        throw std::runtime_error("Unable to open file for reading");
+    }
+
+    std::stringstream buffer;
+    buffer << infile.rdbuf();
+    std::string serialized_data = buffer.str();
+    infile.close();
+
+    // Step 2: Deserialize the binary data using MessagePack
+    msgpack::object_handle oh = msgpack::unpack(serialized_data.data(), serialized_data.size());
+    msgpack::object obj = oh.get();
+
+    std::vector<std::vector<double>> nested_vec;
+    obj.convert(nested_vec);
+
+    return nested_vec;
 
 
 

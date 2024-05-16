@@ -5,13 +5,14 @@
 #ifndef T_PHASE_TRANSITION_PARSEXML_HPP
 #define T_PHASE_TRANSITION_PARSEXML_HPP
 #include "version1LJPot2Atom.hpp"
+//this subroutine parses xml or bin files, we parse bin files for speed
 
 class reader{
 
 public:
     reader(const int &rowNum, const std::string &TDir){
         this->rowNum=rowNum;
-        this->TDir ="./version1Data/1d/row"+std::to_string(rowNum)+"/funcLJPot/initstd::string/"+TDir;
+        this->TDir ="./version1Data/1d/row"+std::to_string(rowNum)+"/funcLJPot/"+TDir;
         std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
         std::smatch T_match;
         if (std::regex_search(TDir, T_match, TPattern)) {
@@ -63,6 +64,16 @@ public:
 
     void UAndxFilesSelected();
 
+    ///
+    /// @param filename bin file name
+    /// @return vector
+    static std::vector<double> readMsgBinVec(const std::string& filename);
+
+    ///
+    /// @param filename bin file name
+    /// @return vector<vector<double>>
+    static std::vector<std::vector<double>> readMsgBinVecVec(const std::string& filename);
+
 
     void parseUFiles();
 
@@ -84,16 +95,19 @@ public:
     double beta = 0;
     int moveNumInOneFlush=3000;
     int loopNumAfterEq=0;
+    int cellNum=0;
     std::vector <std::string> UFilesSelected;
     std::vector <std::string> xAFilesSelected;
     std::vector <std::string> xBFilesSelected;
 
-    std::vector <std::vector<double>> xASelected;
-    std::vector <std::vector<double>> xBSelected;
+    std::vector<double> xASelectedFlat;
+    std::vector<double> xBSelectedFlat;
     std::vector<double> USelected;
 
 
     arma::dcolvec armaU;
+    arma::dmat arma_xA;
+    arma::dmat  arma_xB;
 
     std::vector <std::vector<double>> xAIn;
     std::vector <std::vector<double>> xBIn;

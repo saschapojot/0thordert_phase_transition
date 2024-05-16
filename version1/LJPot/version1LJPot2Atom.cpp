@@ -141,8 +141,8 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     sObjT << T;
     std::string TStr = sObjT.str();
     std::string funcName = demangle(typeid(*potFuncPtr).name());
-    std::string  initFuncName= demangle(typeid(initFuncName).name());
-    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName+"/init"+initFuncName + "/T" + TStr + "/";
+//    std::string  initFuncName= demangle(typeid(initFuncName).name());
+    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName + "/T" + TStr + "/";
 
     std::string outUAllSubDir = outDir + "UAll/";
     std::string out_xA_AllSubDir = outDir + "xA_All/";
@@ -171,8 +171,8 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     if (!fs::is_directory(out_xA_AllBinSubDir) || !fs::exists(out_xA_AllBinSubDir)) {
         fs::create_directories(out_xA_AllBinSubDir);
     }
-    if (!fs::is_directory(out_xB_AllSubDir) || !fs::exists(out_xB_AllSubDir)) {
-        fs::create_directories(out_xB_AllSubDir);
+    if (!fs::is_directory(out_xB_AllBinSubDir ) || !fs::exists(out_xB_AllBinSubDir )) {
+        fs::create_directories(out_xB_AllBinSubDir );
     }
 
     std::regex stopRegex("stop");
@@ -239,9 +239,15 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 
         std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
         this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+        std::string out_xABinFileName=out_xA_AllBinSubDir+filenameMiddle+".xA_All.bin";
+        this->saveVecVecToBin(out_xABinFileName,xA_AllPerFlush);
+
 
         std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
         this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+        std::string out_xBBinFileName=out_xB_AllBinSubDir+filenameMiddle+".xB_All.bin";
+        this->saveVecVecToBin(out_xBBinFileName,xB_AllPerFlush);
+
 
         const auto tflushEnd{std::chrono::steady_clock::now()};
 
@@ -380,12 +386,15 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
     std::string TStr = sObjT.str();
     std::string funcName = demangle(typeid(*potFuncPtr).name());
 
-    std::string  initFuncName= demangle(typeid(initFuncName).name());
-    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName+"/init"+initFuncName + "/T" + TStr + "/";
+//    std::string  initFuncName= demangle(typeid(initFuncName).name());
+    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName+ "/T" + TStr + "/";
 
     std::string outUAllSubDir = outDir + "UAll/";
     std::string out_xA_AllSubDir = outDir + "xA_All/";
     std::string out_xB_AllSubDir = outDir + "xB_All/";
+    std::string outUAllBinSubDir = outDir + "UAllBin/";
+    std::string out_xA_AllBinSubDir = outDir + "xA_AllBin/";
+    std::string out_xB_AllBinSubDir = outDir + "xB_AllBin/";
     const auto tMCStart{std::chrono::steady_clock::now()};
 
     std::cout << "remaining flush number: " << remainingFlushNum << std::endl;
@@ -421,12 +430,22 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
 
         std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
         this->saveVecToXML(outUFileName, UAllPerFlush);
+        std::string outUBinFileName=outUAllBinSubDir+filenameMiddle+"UAll.bin";
+        this->saveVecToBin(outUBinFileName,UAllPerFlush);
 
         std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
         this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+        std::string out_xABinFileName=out_xA_AllBinSubDir+filenameMiddle+".xA_All.bin";
+        this->saveVecVecToBin(out_xABinFileName,xA_AllPerFlush);
+
+
 
         std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
         this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+        std::string out_xBBinFileName=out_xB_AllBinSubDir+filenameMiddle+".xB_All.bin";
+        this->saveVecVecToBin(out_xBBinFileName,xB_AllPerFlush);
+
+
         const auto tflushEnd{std::chrono::steady_clock::now()};
         const std::chrono::duration<double> elapsed_seconds{tflushEnd - tMCStart};
         std::cout << "flush " << fls << std::endl;
@@ -538,6 +557,31 @@ void version1dLJPot2Atom::saveVecToBin(const std::string &filename,const std::ve
 
     } else {
         std::cerr << "Unable to open file for writing "<<filename << std::endl;
+    }
+
+
+
+}
+
+
+
+///
+/// @param filename bin file name of vecvec
+/// @param vecvec vector<vector> to be saved
+void version1dLJPot2Atom::saveVecVecToBin(const std::string &filename,const std::vector<std::vector<double>> &vecvec){
+
+
+    std::stringstream buffer;
+    msgpack::pack(buffer, vecvec);
+    std::string const& serialized_data = buffer.str();
+
+    std::ofstream outfile(filename, std::ios::binary);
+    if (outfile.is_open()) {
+        outfile.write(serialized_data.data(), serialized_data.size());
+        outfile.close();
+//        std::cout << "Data successfully written to " << filename << std::endl;
+    } else {
+        std::cerr << "Unable to open file for writing" << std::endl;
     }
 
 
