@@ -24,7 +24,7 @@ for TFile in glob.glob(pathData+"/T*"):
 #sort T files
 
 sortedInds=np.argsort(TVals)
-sortedTFiles=[TVals[ind] for ind in sortedInds]
+sortedTVals=[TVals[ind] for ind in sortedInds]
 sortedTFiles=[TFileNames[ind] for ind in sortedInds]
 
 

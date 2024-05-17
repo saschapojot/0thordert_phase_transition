@@ -9,42 +9,23 @@ import json
 #This script loads json data and plot
 
 
-pathData="../../version1Data/1d/row0/"
-funcFileNames=[]
-TValsForAllFuncs=[]
-TFileNamesForAllFuncs=[]
-sortedTFilesForAllFuncs=[]
-sortedTValsForAllFuncs=[]
+pathData="../../version1Data/1d/funcLJPotPBC/row0"
 
+TVals=[]
+TFileNames=[]
 
-for funcfile in glob.glob(pathData+"/*"):
-    #first search a values
-    funcFileNames.append(funcfile)
-    # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
-    # aVals.append(float(match_a.group(1)))
-    #for each a, search T values
-    TFilesTmp=[]
-    TValsTmp=[]
-    for TFile in glob.glob(funcfile+"/T*"):
-        TFilesTmp.append(TFile)
-        # print(TFile)
-        matchT=re.search(r"T(\d+(\.\d+)?)",TFile)
-        TValsTmp.append(float(matchT.group(1)))
+for TFile in glob.glob(pathData+"/T*"):
+    TFileNames.append(TFile)
 
-    TFileNamesForAllFuncs.append(TFilesTmp)
-    TValsForAllFuncs.append(TValsTmp)
+    matchT=re.search(r"T(\d+(\.\d+)?)",TFile)
 
+    TVals.append(float(matchT.group(1)))
 
-#sort T files for each func
-for j in range(0,len(funcFileNames)):
-    T_indsTmp=np.argsort(TValsForAllFuncs[j])
-    TValsTmp=TValsForAllFuncs[j]
-    sortedTValsTmp=[TValsTmp[i] for i in T_indsTmp]
-    sortedTValsForAllFuncs.append(sortedTValsTmp)
+#sort T files
 
-    TFilesTmp=TFileNamesForAllFuncs[j]
-    sortedTFilesTmp=[TFilesTmp[i] for i in T_indsTmp]
-    sortedTFilesForAllFuncs.append(sortedTFilesTmp)
+sortedInds=np.argsort(TVals)
+sortedTVals=[TVals[ind] for ind in sortedInds]
+sortedTFiles=[TFileNames[ind] for ind in sortedInds]
 
 
 def pltU(oneTFile):
@@ -199,6 +180,22 @@ def plt_xAxB(oneTFile):
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
 
+    #summary of distance between neighboring points
+
+    smrDistFileName=oneTFile+"/distSummary.txt"
+    #intracell
+    vecDiffIntraCell=[xBMeanAll[i]-xAMeanAll[i] for i in range(0,len(xBMeanAll))]
+    #intercell
+    vecDiffInterCell=[xAMeanAll[i+1]-xBMeanAll[i] for i in range(0,len(xBMeanAll)-1)]
+
+    fptrTxt=open(smrDistFileName,"w")
+    fptrTxt.write("T="+str(TVal)+"\n")
+    fptrTxt.write("Intracell: "+str(vecDiffIntraCell)+"\n")
+    fptrTxt.write("Intercell: "+str(vecDiffInterCell)+"\n")
+    fptrTxt.close()
+
+
+
     plt.figure(figsize=(12, 6))
     plt.ylim(-1, 1)
 
@@ -221,6 +218,7 @@ def plt_xAxB(oneTFile):
     plt.gca().get_yaxis().set_visible(False)
     plt.axhline(y=0, color='black', linewidth=0.5,alpha=0.3)
     gridOut="T"+str(TVal)+"grid.pdf"
+    plt.title("T="+str(np.round(TVal,4)))
     plt.savefig(oneTFile+"/"+gridOut)
 
     plt.close()
@@ -231,10 +229,9 @@ def plt_xAxB(oneTFile):
 
 
 tStatsStart=datetime.now()
-for item in TFileNamesForAllFuncs:
-    for oneTFile in item:
-        pltU(oneTFile)
-        plt_xAxB(oneTFile)
+for oneTFile in sortedTFiles:
+    pltU(oneTFile)
+    plt_xAxB(oneTFile)
 
 tStatsEnd=datetime.now()
 print("stats total time: ",tStatsEnd-tStatsStart)
