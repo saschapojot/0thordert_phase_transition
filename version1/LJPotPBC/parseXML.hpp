@@ -4,7 +4,7 @@
 
 #ifndef T_PHASE_TRANSITION_PARSEXML_HPP
 #define T_PHASE_TRANSITION_PARSEXML_HPP
-#include "version1LJPot2Atom.hpp"
+#include "version1LJPotPBC2Atom.hpp"
 //this subroutine parses xml or bin files, we parse bin files for speed
 
 class reader{

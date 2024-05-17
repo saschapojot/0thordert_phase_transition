@@ -44,9 +44,9 @@ public:
 
 };
 
-class LJPot : public potentialFunction {
+class LJPotPBC : public potentialFunction {
 public:
-    LJPot(const double &alpha1Val, const double &alpha2Val, const double &beta1Val,
+    LJPotPBC(const double &alpha1Val, const double &alpha2Val, const double &beta1Val,
           const double &beta2Val, const double &p1Val, const double &p2Val, const double &q1Val, const double &q2Val) {
 
         this->alpha1 = alpha1Val;
