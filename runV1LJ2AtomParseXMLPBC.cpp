@@ -2,7 +2,7 @@
 // Created by polya on 5/13/24.
 //
 
-#include "./version1/LJPot/parseXML.hpp"
+#include "./version1/LJPotPBC/parseXML.hpp"
 std::vector<std::string> scanFiles(const int& rowNum){
     std::string searchPath="./version1Data/1d/funcLJPotPBC/row"+std::to_string(rowNum)+"/";
     std::vector<std::string> TDirs;

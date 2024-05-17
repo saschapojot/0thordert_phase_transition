@@ -338,6 +338,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     outSummary << "same: " << same << std::endl;
 
     outSummary << "lag=" << lag << std::endl;
+    outSummary<<"step length="<<stddev<<std::endl;
     outSummary.close();
 
     equilibrium = !active;

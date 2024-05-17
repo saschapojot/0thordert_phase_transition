@@ -146,7 +146,7 @@ public:
 
 //        this->diag=isDiag;
         this->N = cellNum;
-        this->stddev=std::sqrt(2.0*h);
+        this->stddev =h;// std::sqrt(2.0 * h);
     }
 
 
