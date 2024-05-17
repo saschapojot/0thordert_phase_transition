@@ -4,7 +4,7 @@
 
 #include "./version1/LJPot/parseXML.hpp"
 std::vector<std::string> scanFiles(const int& rowNum){
-    std::string searchPath="./version1Data/1d/row"+std::to_string(rowNum)+"/funcLJPot/";
+    std::string searchPath="./version1Data/1d/funcLJPot/row"+std::to_string(rowNum)+"/";
     std::vector<std::string> TDirs;
     if(fs::exists(searchPath) && fs::is_directory(searchPath)){
         for(const auto &entry:fs::directory_iterator(searchPath)){

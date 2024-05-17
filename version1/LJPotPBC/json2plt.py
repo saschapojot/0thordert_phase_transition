@@ -9,27 +9,42 @@ import json
 #This script loads json data and plot
 
 
-pathData="../../version1Data/1d/funcLJPot/row1/"
-# funcFileNames=[]
-TVals=[]
-TFileNames=[]
-
-for TFile in glob.glob(pathData+"/T*"):
-    TFileNames.append(TFile)
-
-    matchT=re.search(r"T(\d+(\.\d+)?)",TFile)
-
-    TVals.append(float(matchT.group(1)))
-
-#sort T files
-
-sortedInds=np.argsort(TVals)
-sortedTFiles=[TVals[ind] for ind in sortedInds]
-sortedTFiles=[TFileNames[ind] for ind in sortedInds]
+pathData="../../version1Data/1d/row0/"
+funcFileNames=[]
+TValsForAllFuncs=[]
+TFileNamesForAllFuncs=[]
+sortedTFilesForAllFuncs=[]
+sortedTValsForAllFuncs=[]
 
 
+for funcfile in glob.glob(pathData+"/*"):
+    #first search a values
+    funcFileNames.append(funcfile)
+    # match_a=re.search(r"a(\d+(\.\d+)?)",a_file)
+    # aVals.append(float(match_a.group(1)))
+    #for each a, search T values
+    TFilesTmp=[]
+    TValsTmp=[]
+    for TFile in glob.glob(funcfile+"/T*"):
+        TFilesTmp.append(TFile)
+        # print(TFile)
+        matchT=re.search(r"T(\d+(\.\d+)?)",TFile)
+        TValsTmp.append(float(matchT.group(1)))
+
+    TFileNamesForAllFuncs.append(TFilesTmp)
+    TValsForAllFuncs.append(TValsTmp)
 
 
+#sort T files for each func
+for j in range(0,len(funcFileNames)):
+    T_indsTmp=np.argsort(TValsForAllFuncs[j])
+    TValsTmp=TValsForAllFuncs[j]
+    sortedTValsTmp=[TValsTmp[i] for i in T_indsTmp]
+    sortedTValsForAllFuncs.append(sortedTValsTmp)
+
+    TFilesTmp=TFileNamesForAllFuncs[j]
+    sortedTFilesTmp=[TFilesTmp[i] for i in T_indsTmp]
+    sortedTFilesForAllFuncs.append(sortedTFilesTmp)
 
 
 def pltU(oneTFile):
@@ -184,14 +199,14 @@ def plt_xAxB(oneTFile):
     plt.savefig(oneTFile+"/"+xHistOut)
     plt.close()
 
-    plt.figure(figsize=(20, 6))
+    plt.figure(figsize=(12, 6))
     plt.ylim(-1, 1)
 
 
     for i in range(0,len(xAMeanAll)):
         plt.hlines(y=0,xmin=xAMeanAll[i]-xASdAll[i],xmax=xAMeanAll[i]+xASdAll[i],color="red",linewidth=2,alpha=0.2)
         plt.text(xAMeanAll[i],0.3,str(i)+"A",color="blue", ha='center')
-        plt.text(xAMeanAll[i],-0.1,str(np.round(xAMeanAll[i],2)),color="blue", ha='center',fontsize=8)
+        plt.text(xAMeanAll[i],-0.1,str(np.round(xAMeanAll[i],4)),color="blue", ha='center',fontsize=8)
 
     plt.scatter(xAMeanAll,[0]*len(xAMeanAll),color="blue",s=8,label="A")
 
@@ -199,7 +214,7 @@ def plt_xAxB(oneTFile):
     for i in range(0,len(xBMeanAll)):
         plt.hlines(y=0,xmin=xBMeanAll[i]-xBSdAll[i],xmax=xBMeanAll[i]+xBSdAll[i],color="magenta",linewidth=2,alpha=0.2)
         plt.text(xBMeanAll[i],0.1,str(i)+"B",color="green", ha='center')
-        plt.text(xBMeanAll[i],-0.3,str(np.round(xBMeanAll[i],2)),color="green", ha='center',fontsize=8)
+        plt.text(xBMeanAll[i],-0.3,str(np.round(xBMeanAll[i],4)),color="green", ha='center',fontsize=8)
 
     plt.scatter(xBMeanAll,[0]*len(xBMeanAll),color="green",s=8,label="B")
     plt.legend(loc="best")
@@ -216,9 +231,10 @@ def plt_xAxB(oneTFile):
 
 
 tStatsStart=datetime.now()
-for oneTFile in sortedTFiles:
-    pltU(oneTFile)
-    plt_xAxB(oneTFile)
+for item in TFileNamesForAllFuncs:
+    for oneTFile in item:
+        pltU(oneTFile)
+        plt_xAxB(oneTFile)
 
 tStatsEnd=datetime.now()
 print("stats total time: ",tStatsEnd-tStatsStart)
