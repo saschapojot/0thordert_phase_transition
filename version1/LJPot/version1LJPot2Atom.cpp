@@ -21,8 +21,8 @@ void version1dLJPot2Atom::proposal(const arma::dcolvec &xACurr, const arma::dcol
     std::random_device rd;
     std::ranlux24_base gen(rd());
     //fix left end (0A)
-    zANext(0)=xACurr(0);
-    for (int j = 1; j < N; j++) {
+//    zANext(0)=xACurr(0);
+    for (int j = 0; j < N; j++) {
         std::normal_distribution<double> dTmp(xACurr(j), stddev);
         zANext(j) = dTmp(gen);
     }
@@ -142,7 +142,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     std::string TStr = sObjT.str();
     std::string funcName = demangle(typeid(*potFuncPtr).name());
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
-    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName + "/T" + TStr + "/";
+    std::string outDir = "./version1Data/1d/func" + funcName +"/row"+std::to_string(rowNum)+ "/T" + TStr + "/";
 
     std::string outUAllSubDir = outDir + "UAll/";
     std::string out_xA_AllSubDir = outDir + "xA_All/";
@@ -387,7 +387,7 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
     std::string funcName = demangle(typeid(*potFuncPtr).name());
 
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
-    std::string outDir = "./version1Data/1d/row" + std::to_string(rowNum) + "/func" + funcName+ "/T" + TStr + "/";
+    std::string outDir = "./version1Data/1d/func" + funcName +"/row"+std::to_string(rowNum)+ "/T" + TStr + "/";
 
     std::string outUAllSubDir = outDir + "UAll/";
     std::string out_xA_AllSubDir = outDir + "xA_All/";
@@ -469,7 +469,7 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
 void version1dLJPot2Atom::parseCSV(const int &rowNum, double &alpha1, double &beta1, double &p1, double &q1,
                                    double &alpha2, double &beta2, double &p2, double &q2) {
 
-    std::string filePath = "./version1Input/LJPot/1d/V1LJ2Atom1d.csv";
+    std::string filePath = "./version1Input/1d/LJPot/V1LJ2Atom1d.csv";
     std::string pyFile = "./version1/LJPot/readCSV.py";
     std::string commandToReadCSV = "python3 " + pyFile + " " + filePath + " " + std::to_string(rowNum);
 

@@ -1,6 +1,6 @@
 #include "./version1/LJPot/version1LJPot2Atom.hpp"
 
-//running version 1, Lennard-Jones
+//running version 1, Lennard-Jones + quartic
 
 
 

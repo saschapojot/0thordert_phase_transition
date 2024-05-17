@@ -13,7 +13,7 @@ public:
     reader(const int &rowNum, const std::string &TDir){
         this->rowNum=rowNum;
 
-        this->TDir ="./version1Data/1d/row"+std::to_string(rowNum)+"/funcLJPot/"+TDir;
+        this->TDir ="./version1Data/1d/funcLJPot/row"+std::to_string(rowNum)+TDir;
         std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
         std::smatch T_match;
         if (std::regex_search(TDir, T_match, TPattern)) {

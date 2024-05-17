@@ -32,7 +32,7 @@
 #include <vector>
 
 namespace fs = boost::filesystem;
-//this subroutine computes the mc evolution for a 1d system, 2-atom, Lennard-Jones potential
+//this subroutine computes the mc evolution for a 1d system, 2-atom, Lennard-Jones+quartic potential
 
 class potentialFunction{
     //base class for potential function
