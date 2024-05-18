@@ -4,16 +4,17 @@
 
 #ifndef T_PHASE_TRANSITION_PARSEXML_HPP
 #define T_PHASE_TRANSITION_PARSEXML_HPP
+
 #include "version1LJPotPBC2Atom.hpp"
 //this subroutine parses xml or bin files, we parse bin files for speed
 
-class reader{
+class reader {
 
 public:
-    reader(const int &rowNum, const std::string &TDir){
-        this->rowNum=rowNum;
+    reader(const int &rowNum, const std::string &TDir) {
+        this->rowNum = rowNum;
 
-        this->TDir ="./version1Data/1d/funcLJPotPBC/row"+std::to_string(rowNum)+"/"+TDir;
+        this->TDir = "./version1Data/1d/funcLJPotPBC/row" + std::to_string(rowNum) + "/" + TDir;
         std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
         std::smatch T_match;
         if (std::regex_search(TDir, T_match, TPattern)) {
@@ -34,18 +35,18 @@ public:
     ///
     /// @param path the path containing xml files
     /// @return sorted xml files by starting loop
-    std::vector <std::string> sortOneDir(const std::vector <std::string> &allFiles);
+    std::vector<std::string> sortOneDir(const std::vector<std::string> &allFiles);
 
     template<class T>
-    std::vector <size_t> argsort(const std::vector <T> &v) {
-        std::vector <size_t> idx(v.size());
+    std::vector<size_t> argsort(const std::vector<T> &v) {
+        std::vector<size_t> idx(v.size());
         std::iota(idx.begin(), idx.end(), 0);
         std::stable_sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] <= v[i2]; });
         return idx;
     }
 
     template<class T>
-    static void printVec(const std::vector <T> &vec) {
+    static void printVec(const std::vector<T> &vec) {
         for (int i = 0; i < vec.size() - 1; i++) {
             std::cout << vec[i] << ",";
         }
@@ -54,7 +55,6 @@ public:
 
     ///sort files by starting loop
     void sortFiles();
-
 
 
     void parseSummary();
@@ -68,12 +68,12 @@ public:
     ///
     /// @param filename bin file name
     /// @return vector
-    static std::vector<double> readMsgBinVec(const std::string& filename);
+    static std::vector<double> readMsgBinVec(const std::string &filename);
 
     ///
     /// @param filename bin file name
     /// @return vector<vector<double>>
-    static std::vector<std::vector<double>> readMsgBinVecVec(const std::string& filename);
+    static std::vector<std::vector<double>> readMsgBinVecVec(const std::string &filename);
 
 
     void parseUFiles();
@@ -84,7 +84,27 @@ public:
     void data2json();
 
 
+    ///compute the column means of arma_xA, arma_xB
+    void colmeans();
 
+    ///compute correlation functions GAA
+    void computeGAA();
+
+    ///compute correlation functions GAB
+    void computeGAB();
+
+    ///compute correlation functions GBB
+    void computeGBB();
+
+    static void printMat(const arma::dmat &mat, std::ostream & os)  {
+        int n = mat.n_rows;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n - 1; j++) {
+                os << mat(i, j) << ",";
+            }
+            os<< mat(i, n - 1) << std::endl;
+        }
+    }
 
 
 public:
@@ -99,12 +119,12 @@ public:
     int lastFileNum = 0;
     double T = 0;
     double beta = 0;
-    int moveNumInOneFlush=3000;
-    int loopNumAfterEq=0;
-    int cellNum=0;
-    std::vector <std::string> UFilesSelected;
-    std::vector <std::string> xAFilesSelected;
-    std::vector <std::string> xBFilesSelected;
+    int moveNumInOneFlush = 3000;
+    int loopNumAfterEq = 0;
+    int cellNum = 0;
+    std::vector<std::string> UFilesSelected;
+    std::vector<std::string> xAFilesSelected;
+    std::vector<std::string> xBFilesSelected;
 
     std::vector<double> xASelectedFlat;
     std::vector<double> xBSelectedFlat;
@@ -113,24 +133,32 @@ public:
 
 //    arma::dcolvec armaU;
     arma::dmat arma_xA;
-    arma::dmat  arma_xB;
+    arma::dmat arma_xB;
 
-    std::vector <std::vector<double>> xAIn;
-    std::vector <std::vector<double>> xBIn;
+    std::vector<std::vector<double>> xAIn;
+    std::vector<std::vector<double>> xBIn;
     std::vector<double> UIn;
 
-    std::vector <std::string> UFilesAll;
-    std::vector <std::string> xAFilesAll;
-    std::vector <std::string> xBFilesAll;
-    std::vector <std::string> sorted_UFilesAll;
-    std::vector <std::string> sorted_xAFilesAll;
-    std::vector <std::string> sorted_xBFilesAll;
+    std::vector<std::string> UFilesAll;
+    std::vector<std::string> xAFilesAll;
+    std::vector<std::string> xBFilesAll;
+    std::vector<std::string> sorted_UFilesAll;
+    std::vector<std::string> sorted_xAFilesAll;
+    std::vector<std::string> sorted_xBFilesAll;
     int loopNumToInclude;
     int fileNumSelected;
 
+    arma::drowvec E_xARow;
+    arma::dcolvec E_xACol;
+
+    arma::drowvec E_xBRow;
+    arma::dcolvec E_xBCol;
+
+    arma::dmat E_xA2;
+    arma::dmat E_xB2;
+
 
 };
-
 
 
 #endif //T_PHASE_TRANSITION_PARSEXML_HPP

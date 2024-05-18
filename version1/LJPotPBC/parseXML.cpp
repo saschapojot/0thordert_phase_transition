@@ -410,3 +410,114 @@ void reader::data2json() {
 
 
 }
+
+
+
+///compute the column means of arma_xA, arma_xB
+void reader::colmeans(){
+    this->E_xARow=arma::mean(arma_xA,0);
+    this->E_xBRow=arma::mean(arma_xB,0);
+
+    this->E_xACol=E_xARow.t();
+    this->E_xBCol=E_xBRow.t();
+
+    this->E_xA2=E_xACol*E_xARow;
+    this->E_xB2=E_xBCol*E_xBRow;
+//    std::cout<<"cellNum="<<cellNum<<std::endl;
+
+//    E_xARow.print("mean xA:");
+//    E_xBRow.print("mean xB");
+//
+//E_xA2.print("EA2:");
+//    E_xB2.print("EB2:");
+
+
+}
+
+///compute correlation functions GAA
+void reader::computeGAA() {
+
+    arma::dmat YA = arma::zeros(cellNum, cellNum);
+
+    int Q = arma_xA.n_rows;
+
+    for (int q = 0; q < Q; q++) {
+        arma::drowvec rowTmp = arma_xA.row(q);
+        arma::dcolvec colTmp = rowTmp.t();
+        YA += colTmp * rowTmp;
+
+    }
+
+    double QDB = static_cast<double>(Q);
+
+    YA /= QDB;
+
+//    YA.print("YA:");
+
+    arma::dmat GAA = YA - E_xA2;
+
+    std::string outGAA=TDir+"/GAA.csv";
+    std::ofstream ofs(outGAA);
+
+    printMat(GAA,ofs);
+    ofs.close();
+
+
+}
+
+
+///compute correlation functions GAB
+void reader::computeGAB(){
+
+    arma::dmat YAB = arma::zeros(cellNum, cellNum);
+    int Q = arma_xA.n_rows;
+
+    for(int q=0;q<Q;q++){
+        arma::drowvec rowATmp = arma_xA.row(q);
+        arma::dcolvec colATmp=rowATmp.t();
+
+        arma::drowvec rowBTmp=arma_xB.row(q);
+
+        YAB+=colATmp*rowBTmp;
+
+    }
+
+    double QDB = static_cast<double>(Q);
+
+    YAB/=QDB;
+
+    arma::dmat GAB=YAB-E_xACol*E_xBRow;
+    std::string outGAB=TDir+"/GAB.csv";
+    std::ofstream ofs(outGAB);
+
+    printMat(GAB,ofs);
+    ofs.close();
+
+
+}
+
+
+///compute correlation functions GBB
+void reader::computeGBB(){
+    arma::dmat YB = arma::zeros(cellNum, cellNum);
+
+    int Q = arma_xB.n_rows;
+
+    for(int q=0;q<Q;q++){
+        arma::drowvec rowTmp = arma_xB.row(q);
+        arma::dcolvec colTmp = rowTmp.t();
+        YB += colTmp * rowTmp;
+
+
+    }
+    double QDB = static_cast<double>(Q);
+    YB/=QDB;
+
+    arma::dmat GBB=YB-E_xB2;
+    std::string outGBB=TDir+"/GBB.csv";
+    std::ofstream ofs(outGBB);
+
+    printMat(GBB,ofs);
+    ofs.close();
+
+}
