@@ -200,6 +200,9 @@ void reader::parseUFiles() {
 
 //    std::cout<<armaU<<std::endl;
 
+    std::string USelectedOutFile = TDir + "/USelected.xml";
+    version1dLJPot2Atom::saveVecToXML(USelectedOutFile, USelected);
+
 
 }
 
