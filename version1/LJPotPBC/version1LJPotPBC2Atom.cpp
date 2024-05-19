@@ -296,7 +296,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if (fls % 6 == 5) {
+        if (fls % 6 == 0 and fls>17) {
             try {
                 resultU = this->execPython(commandU.c_str());
                 std::cout << "U message from python: " << resultU << std::endl;
