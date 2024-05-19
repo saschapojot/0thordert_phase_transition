@@ -53,7 +53,7 @@ elif len(inXMLFileNames)%3==1:
 else:
     xmlFileToBeParsed=deepcopy(inXMLFileNames[2:])
 
-lastFileNum=8 if len(xmlFileToBeParsed)>12 else int(len(xmlFileToBeParsed)/3*2)
+lastFileNum=16 if len(xmlFileToBeParsed)>18 else int(len(xmlFileToBeParsed)/3*2)
 
 xmlFileToBeParsed=xmlFileToBeParsed[-lastFileNum:]
 
@@ -163,7 +163,7 @@ def Jackknife(vec):
 #computation of auto-correlation
 NLags=int(np.ceil(len(vecValsCombined)*5/6))
 acfOfVec=sm.tsa.acf(vecValsCombined,nlags=NLags)
-eps=5e-3
+eps=1e-3
 
 lagVal=0
 if np.min(np.abs(acfOfVec))>eps:
