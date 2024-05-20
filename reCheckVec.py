@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 # from datetime import datetime
 import statsmodels.api as sm
-from scipy import stats
+# from scipy import stats
 import glob
 import sys
 import re
@@ -158,7 +158,7 @@ else:
     print("len(selectedFromPart0)="+str(len(selectedFromPart0)))
     print("len(selectedFromPart1)="+str(len(selectedFromPart1)))
     postCheckFile=rootPath+"/post.txt"
-    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value:: "+str(result.pvalue)+"\n"
+    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value: "+str(result.pvalue)+"\n"
     print(msg)
     with open(postCheckFile,"w+") as fptr:
         fptr.write(msg)
