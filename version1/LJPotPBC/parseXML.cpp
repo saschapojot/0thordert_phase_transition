@@ -147,6 +147,8 @@ void reader::UAndxFilesSelected() {
     double moveNumInOneFlushDB = static_cast<double >(moveNumInOneFlush);
 
     fileNumSelected = static_cast<int>(std::ceil(loopNumToIncludeDB / moveNumInOneFlushDB));
+    std::string cmd="python3 reCheckVec.py "+TDir+" "+std::to_string(fileNumSelected);
+    version1dLJPot2Atom::execPython(cmd.c_str());
 //    std::cout<<"fileNumSelected="<<fileNumSelected<<std::endl;
 
 
@@ -200,8 +202,8 @@ void reader::parseUFiles() {
 
 //    std::cout<<armaU<<std::endl;
 
-    std::string USelectedOutFile = TDir + "/USelected.xml";
-    version1dLJPot2Atom::saveVecToXML(USelectedOutFile, USelected);
+//    std::string USelectedOutFile = TDir + "/USelected.xml";
+//    version1dLJPot2Atom::saveVecToXML(USelectedOutFile, USelected);
 
 
 }

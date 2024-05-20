@@ -169,10 +169,13 @@ def plotGAA(j):
     :return: correlation function of xA
     """
     colATmp=fAArray[:,j]
+    plt.figure(figsize=(12, 6))
     plt.plot(sortedTVals,colATmp,color="blue")
     plt.scatter(sortedTVals,colATmp,color="red")
+    # plt.xticks(sortedTVals)
     plt.xlabel("T")
     plt.ylabel("$G^{AA}($"+str(j)+"$)$")
+    # plt.xscale("log")
 
 
     plt.savefig(pathData+"/GAA"+str(j)+".pdf")
@@ -192,6 +195,7 @@ def plotrAA(j):
     plt.scatter(sortedTVals,rhoTmp,color="magenta")
     plt.xlabel("T")
     plt.ylabel("$\\rho^{AA}($"+str(j)+"$)$")
+    # plt.xscale("log")
 
 
     plt.savefig(pathData+"/rhoAA"+str(j)+".pdf")
@@ -210,6 +214,7 @@ def plotGBB(j):
     plt.scatter(sortedTVals,colBTmp,color="red")
     plt.xlabel("T")
     plt.ylabel("$G^{BB}($"+str(j)+"$)$")
+    # plt.xscale("log")
 
 
     plt.savefig(pathData+"/GBB"+str(j)+".pdf")
@@ -229,6 +234,7 @@ def plotrBB(j):
     plt.scatter(sortedTVals,rhoTmp,color="magenta")
     plt.xlabel("T")
     plt.ylabel("$\\rho^{BB}($"+str(j)+"$)$")
+    # plt.xscale("log")
 
 
     plt.savefig(pathData+"/rhoBB"+str(j)+".pdf")
@@ -249,6 +255,7 @@ def plotGAB(j):
     plt.xlabel("T")
     plt.ylabel("$G^{AB}($"+str(j)+"$)$")
     plt.savefig(pathData+"/GAB"+str(j)+".pdf")
+    # plt.xscale("log")
 
     plt.close()
 
@@ -269,6 +276,7 @@ def plotrAB(j):
     plt.scatter(sortedTVals,rhoTmp,color="magenta")
     plt.xlabel("T")
     plt.ylabel("$\\rho^{AB}($"+str(j)+"$)$")
+    # plt.xscale("log")
 
 
     plt.savefig(pathData+"/rhoAB"+str(j)+".pdf")
