@@ -254,7 +254,7 @@ public:
     double T;// temperature
     double beta;
     int moveNumInOneFlush = 3000;// flush the results to python every moveNumInOneFlush iterations
-    int flushMaxNum = 700;
+    int flushMaxNum = 7000;
     int dataNumTotal = 8000;
     double h;// step size
 //    double a=5.3;//stiffness
