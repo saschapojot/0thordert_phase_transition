@@ -232,7 +232,7 @@ public:
     /// @param xA_init xA from readEqMc
     /// @param xB_init xB from readEqMc
     /// @param LInit
-    void executionMCAfterEq(const int &lag, const int &loopEq, const std::vector<double> &xA_init,
+    void executionMCAfterEq(int &lag, const int &loopEq, const std::vector<double> &xA_init,
                             const std::vector<double> &xB_init, const double &LInit);
 
     std::string demangle(const char *name) {
@@ -265,6 +265,7 @@ public:
     std::shared_ptr<potentialFunction> potFuncPtr;
     double stddev;
     int rowNum;
+    int nCounterStart=-1;
 
 
 };
