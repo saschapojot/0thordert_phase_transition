@@ -52,7 +52,7 @@ sortedXMLFileNames=[inXMLFileNames[ind] for ind in start_inds]
 
 xmlFileToBeParsed=sortedXMLFileNames[-fileNumSelected:]
 
-
+# print(len(xmlFileToBeParsed))
 def parse1File(fileName):
     """
 
@@ -154,10 +154,12 @@ else:
     selectedFromPart0=part0[::lagVal]
     # print(len(selectedFromPart0))
     selectedFromPart1=part1[::lagVal]
-    result = ks_2samp(part0, part1)
+    result = ks_2samp(selectedFromPart0, selectedFromPart1)
+    print("len(selectedFromPart0)="+str(len(selectedFromPart0)))
+    print("len(selectedFromPart1)="+str(len(selectedFromPart1)))
     postCheckFile=rootPath+"/post.txt"
     msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value:: "+str(result.pvalue)+"\n"
     print(msg)
-    with open(postCheckFile) as fptr:
+    with open(postCheckFile,"w+") as fptr:
         fptr.write(msg)
 
