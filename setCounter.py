@@ -106,4 +106,5 @@ else:
     msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"p="+str(result.pvalue)+"\n"\
     +"numDataPoints="+str(numDataPoints)
     print(msg)
+    print("nCounterStart="+str(nCounterStart))
     exit()
