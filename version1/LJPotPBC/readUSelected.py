@@ -64,7 +64,7 @@ def ksTestU(oneTFile):
     outKsFile=oneTFile+"/ks.txt"
     mean1,hf1=Jackknife(UPart1)
     mean2,hf2=Jackknife(UPart2)
-    with open(outKsFile,"w") as fptr:
+    with open(outKsFile,"w+") as fptr:
         fptr.write("K-S statistic: "+str(result.statistic)+"\n")
         fptr.write("P-value:: "+str(result.pvalue)+"\n")
         fptr.write("mean1="+str(mean1)+", hf1="+str(hf1)+"\n")

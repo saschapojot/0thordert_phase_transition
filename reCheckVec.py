@@ -156,7 +156,8 @@ else:
     selectedFromPart1=part1[::lagVal]
     result = ks_2samp(part0, part1)
     postCheckFile=rootPath+"/post.txt"
+    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value:: "+str(result.pvalue)+"\n"
+    print(msg)
     with open(postCheckFile) as fptr:
-        fptr.write("lag="+str(lagVal)+"\n")
-        fptr.write("K-S statistic: "+str(result.statistic)+"\n")
-        fptr.write("P-value:: "+str(result.pvalue)+"\n")
+        fptr.write(msg)
+
