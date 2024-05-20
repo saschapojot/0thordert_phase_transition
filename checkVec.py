@@ -2,12 +2,13 @@ import xml.etree.ElementTree as ET
 import numpy as np
 # from datetime import datetime
 import statsmodels.api as sm
-from scipy import stats
+# from scipy import stats
 import glob
 import sys
 import re
 from copy import deepcopy
 import warnings
+from scipy.stats import ks_2samp
 
 
 #This script checks if a vector reaches equilibrium
@@ -26,7 +27,7 @@ xmlFilesPath=str(sys.argv[1])
 inXMLFileNames=[]
 startVals=[]
 
-for file in glob.glob(xmlFilesPath+"/*"):
+for file in glob.glob(xmlFilesPath+"/*.xml"):
     inXMLFileNames.append(file)
     matchStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
     if matchStart:
@@ -53,7 +54,7 @@ elif len(inXMLFileNames)%3==1:
 else:
     xmlFileToBeParsed=deepcopy(inXMLFileNames[2:])
 
-lastFileNum=16 if len(xmlFileToBeParsed)>18 else int(len(xmlFileToBeParsed)/3*2)
+lastFileNum=1000 if len(xmlFileToBeParsed)>1500 else int(len(xmlFileToBeParsed)/3*2)
 
 xmlFileToBeParsed=xmlFileToBeParsed[-lastFileNum:]
 
@@ -178,12 +179,18 @@ else:
     selectedFromPart0=part0[::lagVal]
     # print(len(selectedFromPart0))
     selectedFromPart1=part1[::lagVal]
-    mean0,hf0=Jackknife(part0)
-    mean1,hf1=Jackknife(part1)
-    print("mean0="+str(mean0)+", mean1="+str(mean1))
-    print("hf0="+str(hf0)+", hf1="+str(hf1))
-    if np.abs(mean0-mean1)<=hf0 or np.abs(mean0-mean1)<=hf1:
-        print(sigEq+" ,lag="+str(lagVal)+", fileNum="+str(lastFileNum))
+    # mean0,hf0=Jackknife(part0)
+    # mean1,hf1=Jackknife(part1)
+    # print("mean0="+str(mean0)+", mean1="+str(mean1))
+    # print("hf0="+str(hf0)+", hf1="+str(hf1))
+    result = ks_2samp(selectedFromPart0, selectedFromPart1)
+    print("len(selectedFromPart0)="+str(len(selectedFromPart0)))
+    print("len(selectedFromPart1)="+str(len(selectedFromPart1)))
+    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value: "+str(result.pvalue)+"\n"\
+    +"fileNum="+str(lastFileNum)+", nCountStart="+str(len(inXMLFileNames)-lastFileNum)
+    if result.pvalue>0.1:
+        print(sigEq)
+        print(msg)
         exit()
     else:
         print(sigContinue)
