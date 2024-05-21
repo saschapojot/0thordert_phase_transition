@@ -30,7 +30,7 @@ fileNumSelected=int(sys.argv[2])
 inXMLFileNames=[]
 startVals=[]
 
-for file in glob.glob(xmlFilesPath+"/*UAll.xml"):
+for file in glob.glob(xmlFilesPath+"/*.xml"):
     inXMLFileNames.append(file)
     matchStart=re.search(r"loopStart(\d+)loopEnd",file)
     startVals.append(matchStart.group(1))
@@ -51,7 +51,7 @@ sortedXMLFileNames=[inXMLFileNames[ind] for ind in start_inds]
 
 
 xmlFileToBeParsed=sortedXMLFileNames[-fileNumSelected:]
-
+# print("len(xmlFileToBeParsed)="+str(len(xmlFileToBeParsed)))
 # print(len(xmlFileToBeParsed))
 def parse1File(fileName):
     """
@@ -96,8 +96,8 @@ with warnings.catch_warnings():
         exit()
 
 halfLength=int(len(vecValsCombined)/2)
-part0=vecValsCombined[:halfLength]
-part1=vecValsCombined[halfLength:]
+# part0=vecValsCombined[:halfLength]
+# part1=vecValsCombined[halfLength:]
 
 same0=False
 same1=False
@@ -151,9 +151,15 @@ if np.min(np.abs(acfOfVec))>eps:
 
 else:
     lagVal=np.where(np.abs(acfOfVec)<=eps)[0][0]
-    selectedFromPart0=part0[::lagVal]
+    vecValsSelected=vecValsCombined[::lagVal]
+    lengTmp=len(vecValsSelected)
+    if lengTmp%2==1:
+        lengTmp-=1
+    vecValsToCompute=vecValsSelected[:lengTmp]
+    lenPart=int(len(vecValsToCompute)/2)
+    selectedFromPart0=vecValsToCompute[:lenPart]
     # print(len(selectedFromPart0))
-    selectedFromPart1=part1[::lagVal]
+    selectedFromPart1=vecValsToCompute[lenPart:]
     result = ks_2samp(selectedFromPart0, selectedFromPart1)
     print("len(selectedFromPart0)="+str(len(selectedFromPart0)))
     print("len(selectedFromPart1)="+str(len(selectedFromPart1)))
