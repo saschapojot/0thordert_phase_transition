@@ -155,10 +155,10 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
     std::string outDir = "./version1Data/1d/func" + funcName +"/row"+std::to_string(rowNum)+ "/T" + TStr + "/";
 
-    std::string outUAllSubDir = outDir + "UAll/";
-    std::string out_xA_AllSubDir = outDir + "xA_All/";
-    std::string out_xB_AllSubDir = outDir + "xB_All/";
-    std::string outLAllSubDir=outDir+"LAll/";
+    std::string outUAllSubDir = outDir + "UAllPickle/";
+//    std::string out_xA_AllSubDir = outDir + "xA_All/";
+//    std::string out_xB_AllSubDir = outDir + "xB_All/";
+    std::string outLAllSubDir=outDir+"LAllPickle/";
 
 
     std::string outUAllBinSubDir = outDir + "UAllBin/";
@@ -170,13 +170,13 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         fs::create_directories(outUAllSubDir);
     }
 
-    if (!fs::is_directory(out_xA_AllSubDir) || !fs::exists(out_xA_AllSubDir)) {
-        fs::create_directories(out_xA_AllSubDir);
-    }
+//    if (!fs::is_directory(out_xA_AllSubDir) || !fs::exists(out_xA_AllSubDir)) {
+//        fs::create_directories(out_xA_AllSubDir);
+//    }
 
-    if (!fs::is_directory(out_xB_AllSubDir) || !fs::exists(out_xB_AllSubDir)) {
-        fs::create_directories(out_xB_AllSubDir);
-    }
+//    if (!fs::is_directory(out_xB_AllSubDir) || !fs::exists(out_xB_AllSubDir)) {
+//        fs::create_directories(out_xB_AllSubDir);
+//    }
 
     if (!fs::is_directory(outLAllSubDir) || !fs::exists(outLAllSubDir)) {
         fs::create_directories(outLAllSubDir);
@@ -264,24 +264,26 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
 
-        std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
+        std::string outUPickleFileName = outUAllSubDir + filenameMiddle + ".UAll.pkl";
         std::string outUBinFileName=outUAllBinSubDir+filenameMiddle+"UAll.bin";
-        this->saveVecToXML(outUFileName, UAllPerFlush);
+//        this->saveVecToXML(outUFileName, UAllPerFlush);
+        save_vector_to_pickle(UAllPerFlush,outUPickleFileName);
         this->saveVecToBin(outUBinFileName,UAllPerFlush);
 
-        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
-        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+//        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
+//        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
         std::string out_xABinFileName=out_xA_AllBinSubDir+filenameMiddle+".xA_All.bin";
         this->saveVecVecToBin(out_xABinFileName,xA_AllPerFlush);
 
 
-        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
-        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+//        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
+//        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
         std::string out_xBBinFileName=out_xB_AllBinSubDir+filenameMiddle+".xB_All.bin";
         this->saveVecVecToBin(out_xBBinFileName,xB_AllPerFlush);
 
-        std::string outLFileName=outLAllSubDir+filenameMiddle+".LAll.xml";
-        this->saveVecToXML(outLFileName,LAllPerFlush);
+        std::string outLPickleFileName=outLAllSubDir+filenameMiddle+".LAll.pkl";
+        save_vector_to_pickle(LAllPerFlush,outLPickleFileName);
+//        this->saveVecToXML(outLFileName,LAllPerFlush);
         std::string outLBinFileName=outLAllBinSubDir+filenameMiddle+".LAll.bin";
         this->saveVecToBin(outLBinFileName,LAllPerFlush);
 
@@ -300,8 +302,13 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 
         if (fls % 100 == 0 and fls>1000) {
             try {
+                const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
                 std::cout << "U message from python: " << resultU << std::endl;
+                const auto tPyEnd{std::chrono::steady_clock::now()};
+
+                const std::chrono::duration<double> elapsedpy_secondsAll{tPyEnd - tPyStart};
+                std::cout << "py time: " << elapsedpy_secondsAll.count()  << " s" << std::endl;
 
             }
             catch (const std::exception &e) {
@@ -382,6 +389,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 
     outSummary << "lag=" << lag << std::endl;
     outSummary<<"step length="<<stddev<<std::endl;
+    outSummary<<"nCounterStart="<<nCounterStart<<std::endl;
     outSummary.close();
 
     equilibrium = !active;
@@ -426,10 +434,10 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
     std::string outDir = "./version1Data/1d/func" + funcName + "/row" + std::to_string(rowNum) + "/T" + TStr + "/";
 
-    std::string outUAllSubDir = outDir + "UAll/";
-    std::string out_xA_AllSubDir = outDir + "xA_All/";
-    std::string out_xB_AllSubDir = outDir + "xB_All/";
-    std::string outLAllSubDir = outDir + "LAll/";
+    std::string outUAllSubDir = outDir +  "UAllPickle/";
+//    std::string out_xA_AllSubDir = outDir + "xA_All/";
+//    std::string out_xB_AllSubDir = outDir + "xB_All/";
+    std::string outLAllSubDir = outDir + "LAllPickle/";
 
 
     std::string outUAllBinSubDir = outDir + "UAllBin/";
@@ -482,24 +490,26 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
         int loopEnd = loopStart + moveNumInOneFlush - 1;
         std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
-        std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
+        std::string outUPickleFileName = outUAllSubDir + filenameMiddle + ".UAll.pkl";
         std::string outUBinFileName = outUAllBinSubDir + filenameMiddle + "UAll.bin";
-        this->saveVecToXML(outUFileName, UAllPerFlush);
+//        this->saveVecToXML(outUFileName, UAllPerFlush);
+        save_vector_to_pickle(UAllPerFlush,outUPickleFileName);
         this->saveVecToBin(outUBinFileName, UAllPerFlush);
 
-        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
-        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+//        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
+//        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
         std::string out_xABinFileName = out_xA_AllBinSubDir + filenameMiddle + ".xA_All.bin";
         this->saveVecVecToBin(out_xABinFileName, xA_AllPerFlush);
 
-        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
-        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+//        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
+//        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
         std::string out_xBBinFileName = out_xB_AllBinSubDir + filenameMiddle + ".xB_All.bin";
         this->saveVecVecToBin(out_xBBinFileName, xB_AllPerFlush);
 
 
-        std::string outLFileName = outLAllSubDir + filenameMiddle + ".LAll.xml";
-        this->saveVecToXML(outLFileName, LAllPerFlush);
+        std::string outLPickleFileName=outLAllSubDir+filenameMiddle+".LAll.pkl";
+//        this->saveVecToXML(outLFileName, LAllPerFlush);
+        save_vector_to_pickle(LAllPerFlush,outLPickleFileName);
         std::string outLBinFileName = outLAllBinSubDir + filenameMiddle + ".LAll.bin";
         this->saveVecToBin(outLBinFileName, LAllPerFlush);
 
@@ -512,10 +522,15 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
 
         std::string commandU = "python3 setCounter.py " + outUAllSubDir + " " + std::to_string(nCounterStart);
         std::string resultU;
-        if (fls % 1000 == 0 and fls > 1000) {
+        if (fls % 10000 == 0 and fls > 10000) {
             try {
+                const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
                 std::cout << "U message from python: " << resultU << std::endl;
+                const auto tPyEnd{std::chrono::steady_clock::now()};
+
+                const std::chrono::duration<double> elapsedpy_secondsAll{tPyEnd - tPyStart};
+                std::cout << "py time: " << elapsedpy_secondsAll.count()  << " s" << std::endl;
 
             }
             catch (const std::exception &e) {
@@ -549,13 +564,15 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
 
                 if (pVal <= 0.1) {
                     nCounterStart += 1000;
-                    continue;
+//                    continue;
                 } else {
                     if (dataPntNum >= dataNumTotal) {
                         active = false;
                     }
 
                 }
+
+                std::cout<<"flush "<<fls<<", nCounterStart="<<nCounterStart<<std::endl;
 
 
             }//end of regex search
@@ -701,4 +718,37 @@ void version1dLJPot2Atom::saveVecVecToBin(const std::string &filename,const std:
 
 
 
+}
+
+
+void save_vector_to_pickle(const std::vector<double>& vec, const std::string& filename) {
+    using namespace boost::python;
+    Py_Initialize();  // Initialize the Python interpreter
+
+    try {
+        // Import the pickle module
+        object pickle = import("pickle");
+        object pickle_dumps = pickle.attr("dumps");
+
+        // Create a Python list from the C++ vector
+        list py_list;
+        for (const double& value : vec) {
+            py_list.append(value);
+        }
+
+        // Serialize the list using pickle.dumps
+        object serialized_vec = pickle_dumps(py_list);
+
+        // Extract the serialized data as a string
+        std::string serialized_str = extract<std::string>(serialized_vec);
+
+        // Write the serialized data to a file
+        std::ofstream file(filename, std::ios::binary);
+        file.write(serialized_str.data(), serialized_str.size());
+        file.close();
+    } catch (error_already_set) {
+        PyErr_Print();
+    }
+
+    Py_Finalize();  // Finalize the Python interpreter
 }

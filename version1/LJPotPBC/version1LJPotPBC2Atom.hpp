@@ -13,8 +13,13 @@
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/json.hpp>
+#include <boost/python.hpp>
+#include <boost/python/object/pickle_support.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/vector.hpp>
+
 
 #include <cmath>
 #include <chrono>
@@ -269,6 +274,6 @@ public:
 
 
 };
-
+void save_vector_to_pickle(const std::vector<double>& vec, const std::string& filename);
 
 #endif //T_PHASE_TRANSITION_VERSION1LJPOT2ATOM_HPP
