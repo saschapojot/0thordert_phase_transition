@@ -300,7 +300,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if (fls % 10000 == 0 and fls>9999) {
+        if (fls % 1000 == 0 and fls>1000) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
@@ -522,7 +522,7 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
 
         std::string commandU = "python3 setCounter.py " + outUAllSubDir + " " + std::to_string(nCounterStart);
         std::string resultU;
-        if (fls % 500 == 0 and fls > 499) {
+        if (fls % 10000 == 0 and fls > 9999) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
