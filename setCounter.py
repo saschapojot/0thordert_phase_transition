@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+import pickle
 import numpy as np
 # from datetime import datetime
 import statsmodels.api as sm
@@ -21,16 +21,16 @@ if (len(sys.argv)!=3):
     exit()
 
 
-xmlFilesPath=str(sys.argv[1])
+pklFilesPath=str(sys.argv[1])
 
 nCounterStart=int(sys.argv[2])
 
 #fetch files in the directory
-inXMLFileNames=[]
+inPKLFileNames=[]
 startVals=[]
 
-for file in glob.glob(xmlFilesPath+"/*.xml"):
-    inXMLFileNames.append(file)
+for file in glob.glob(pklFilesPath+"/*.pkl"):
+    inPKLFileNames.append(file)
     matchStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
     if matchStart:
         startVals.append(matchStart.group(1))
@@ -45,39 +45,29 @@ startVals = str2int(startVals)
 start_inds = np.argsort(startVals)
 
 #sort files by starting value
-inSortedXMLFileNames=[inXMLFileNames[ind] for ind in start_inds]
+inSortedPKLFileNames=[inPKLFileNames[ind] for ind in start_inds]
 
 
-def parse1File(fileName):
-    """
-
-    :param fileName: xml file name
-    :return: the values in the vector
-    """
-
-    tree=ET.parse(fileName)
-    root = tree.getroot()
-    vec=root.find("vec")
-    vec_items=vec.findall('item')
-    vecValsAll=[float(item.text) for item in vec_items]
-    # vecValsAll=np.array(vecValsAll)
-    return vecValsAll
+def parse1File(oneFileName):
+    with open(oneFileName,"rb") as fptr:
+        oneVec=list(pickle.load(fptr))
+        return oneVec
 
 
 
-xmlFileToBeParsed=inSortedXMLFileNames[nCounterStart:]
+pklFileToBeParsed=inSortedPKLFileNames[nCounterStart:]
 
 #combine all vectors
-vecValsCombined=parse1File(xmlFileToBeParsed[0])
+vecValsCombined=parse1File(pklFileToBeParsed[0])
 
-for file in xmlFileToBeParsed[1:]:
+for file in pklFileToBeParsed[1:]:
     vecValsCombined+=parse1File(file)
 
 
-vecValsCombined=np.array(vecValsCombined)
-halfLength=int(len(vecValsCombined)/2)
-part0=vecValsCombined[:halfLength]
-part1=vecValsCombined[halfLength:]
+# vecValsCombined=np.array(vecValsCombined)
+# halfLength=int(len(vecValsCombined)/2)
+# part0=vecValsCombined[:halfLength]
+# part1=vecValsCombined[halfLength:]
 
 
 #computation of auto-correlation
@@ -95,12 +85,17 @@ if np.min(np.abs(acfOfVec))>eps:
 
 else:
     lagVal=np.where(np.abs(acfOfVec)<=eps)[0][0]
-    selectedFromPart0=part0[::lagVal]
-    # print(len(selectedFromPart0))
-    selectedFromPart1=part1[::lagVal]
+    vecValsSelected=vecValsCombined[::lagVal]
+    lengthTmp=len(vecValsSelected)
+    if lengthTmp%2==1:
+        lengthTmp-=1
+    vecValsToCompute=vecValsSelected[:lengthTmp]
+    lenPart=int(len(vecValsToCompute)/2)
+    selectedFromPart0=vecValsToCompute[:lenPart]
+    selectedFromPart1=vecValsToCompute[lenPart:]
     result = ks_2samp(selectedFromPart0, selectedFromPart1)
 
-    numDataPoints=len(selectedFromPart0)+len(selectedFromPart0)
+    numDataPoints=len(selectedFromPart0)+len(selectedFromPart1)
     p=result.pvalue
 
     msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"p="+str(result.pvalue)+"\n"\

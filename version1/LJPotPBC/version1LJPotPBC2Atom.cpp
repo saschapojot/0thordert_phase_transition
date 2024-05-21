@@ -47,7 +47,7 @@ void version1dLJPot2Atom::proposal(const arma::dcolvec &xACurr, const arma::dcol
 /// @param cmd python execution string
 /// @return signal from the python
 std::string version1dLJPot2Atom::execPython(const char *cmd) {
-    std::array<char, 4096> buffer; // Buffer to store command output
+    std::array<char, 4096*4> buffer; // Buffer to store command output
     std::string result; // String to accumulate output
 
     // Open a pipe to read the output of the executed command
@@ -300,7 +300,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if (fls % 100 == 0 and fls>1000) {
+        if (fls % 10000 == 0 and fls>9999) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
@@ -522,7 +522,7 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
 
         std::string commandU = "python3 setCounter.py " + outUAllSubDir + " " + std::to_string(nCounterStart);
         std::string resultU;
-        if (fls % 10000 == 0 and fls > 10000) {
+        if (fls % 500 == 0 and fls > 499) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
