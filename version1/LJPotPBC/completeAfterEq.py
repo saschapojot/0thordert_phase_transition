@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-# from datetime import datetime
+from datetime import datetime
 import statsmodels.api as sm
 # from scipy import stats
 import glob
@@ -32,6 +32,9 @@ def searchFile(oneTFile):
 
 
 pathRoot=sys.argv[1]
+rst=searchFile(pathRoot)
+if rst==True:
+    exit(0)
 
 nCounterStart=int(sys.argv[2])
 
@@ -64,7 +67,7 @@ def parse1File(oneFileName):
     with open(oneFileName,"rb") as fptr:
         oneVec=list(pickle.load(fptr))
         return oneVec
-
+tParseStart=datetime.now()
 
 pklFileToBeParsed=inSortedPKLFileNames[nCounterStart:]
 
@@ -74,10 +77,15 @@ vecValsCombined=parse1File(pklFileToBeParsed[0])
 for file in pklFileToBeParsed[1:]:
     vecValsCombined+=parse1File(file)
 
+tParseEnd=datetime.now()
+print("reading time: ",tParseEnd-tParseStart)
 #computation of auto-correlation
+print("entering stats")
+tStatsStart=datetime.now()
 NLags=int(np.ceil(len(vecValsCombined)*5/6))
 acfOfVec=sm.tsa.acf(vecValsCombined,nlags=NLags)
 eps=1e-3
+
 
 lagVal=0
 if np.min(np.abs(acfOfVec))>eps:
@@ -105,3 +113,5 @@ else:
     with open(outSmrName,"w+") as fptr:
         fptr.write(msg)
 
+tStatsEnd=datetime.now()
+print("stats time: ",tStatsEnd-tStatsStart)
