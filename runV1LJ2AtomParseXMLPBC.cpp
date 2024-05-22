@@ -35,12 +35,12 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> TDirs = scanFiles(rowNum);
     for (const auto &s: TDirs) {
         std::cout<<"file is "<<s<<std::endl;
-//        std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
-//        std::smatch T_match;
-//        std::regex_search(s,T_match,TPattern);
-//        if (std::stod(T_match.str(1))>0.45 or std::stod(T_match.str(1))<0.35){
-//            continue;
-//        }
+        std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
+        std::smatch T_match;
+        std::regex_search(s,T_match,TPattern);
+        if (std::stod(T_match.str(1))<=0.00099){
+            continue;
+        }
 
         const auto tCStart{std::chrono::steady_clock::now()};
         auto rd = reader(rowNum, s);
