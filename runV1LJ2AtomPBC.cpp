@@ -43,9 +43,9 @@ int main(int argc, char *argv[]) {
     double last_L;
 
     v1Obj.readEqMc(lag,totalLoopEq,eq,same,last_xA,last_xB,last_L);
-    int lagNew=0;
+
     if(!same and lag>0 and eq){
-        v1Obj.executionMCAfterEq(lagNew,totalLoopEq,last_xA,last_xB,last_L);
+        v1Obj.executionMCAfterEq(lag,totalLoopEq,last_xA,last_xB,last_L);
     }
 
     return 0;
