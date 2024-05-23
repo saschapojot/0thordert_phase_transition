@@ -82,8 +82,9 @@ double version1dLJPot2Atom::acceptanceRatio(const arma::dcolvec &xA, const arma:
     double numerator = -f(zA, zB, LNext);
 
     double denominator = -f(xA, xB,LCurr);
-
-
+    double UCurr=(*potFuncPtr)(xA, xB,LCurr);
+    double UNext=(*potFuncPtr)(zA, zB, LNext);
+    std::cout<<"UCurr="<<UCurr<<", UNext="<<UNext<<std::endl;
     double ratio = std::exp(numerator - denominator);
 
     return std::min(1.0, ratio);
@@ -241,15 +242,17 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
             arma::dcolvec xBNext = arma::dcolvec(N);
             double LNext;
             proposal(xACurr, xBCurr,LCurr, xANext, xBNext,LNext);
-
             double r = acceptanceRatio(xACurr, xBCurr,LCurr, xANext, xBNext,LNext);
             double u = distUnif01(e2);
+
             counter++;
             if (u <= r) {
+//                std::cout<<"UCurr="<<UCurr<<std::endl;
                 xACurr = xANext;
                 xBCurr = xBNext;
                 LCurr=LNext;
                 UCurr = (*potFuncPtr)(xACurr, xBCurr,LCurr);
+//                std::cout<<"UNext="<<UCurr<<std::endl;
             }
 
             xA_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xACurr));
@@ -300,7 +303,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if (fls % 1000 == 0 and fls>1000) {
+        if (fls % 4000 == 0 and fls>3999) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
@@ -410,19 +413,30 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 /// @param xA_init xA from readEqMc
 /// @param xB_init xB from readEqMc
 /// @param LInit
-void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const std::vector<double> &xA_init,
+void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, const std::vector<double> &xA_init,
                                              const std::vector<double> &xB_init, const double &LInit) {
 
+    int counter = 0;
+    int remainingDataNum = this->dataNumTotal - static_cast<int>(std::floor(lastFileNum * moveNumInOneFlush / lag));
 
-    bool active = true;
-    int fls = 0;
+    int remainingLoopNum = remainingDataNum * lag;
+    if (remainingLoopNum <= 0) {
+        return;
+    }
+    std::cout<<"remainingLoopNum="<<remainingLoopNum<<std::endl;
+
+    double remainingLoopNumDB = static_cast<double>(remainingLoopNum);
+    double remainingFlushNumDB = std::ceil(remainingLoopNumDB / moveNumInOneFlush);
+    int remainingFlushNum = static_cast<int>(remainingFlushNumDB);
     std::random_device rd;
     std::ranlux24_base e2(rd());
     std::uniform_real_distribution<> distUnif01(0, 1);//[0,1)
+
     arma::dcolvec xACurr(xA_init);
     arma::dcolvec xBCurr(xB_init);
-    double LCurr = LInit;
-    double UCurr = (*potFuncPtr)(xACurr, xBCurr, LCurr);
+    double LCurr=LInit;
+
+    double UCurr = (*potFuncPtr)(xACurr, xBCurr,LCurr);
     //output directory
     std::ostringstream sObjT;
     sObjT << std::fixed;
@@ -432,36 +446,23 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
     std::string funcName = demangle(typeid(*potFuncPtr).name());
 
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
-    std::string outDir = "./version1Data/1d/func" + funcName + "/row" + std::to_string(rowNum) + "/T" + TStr + "/";
+    std::string outDir = "./version1Data/1d/func" + funcName +"/row"+std::to_string(rowNum)+ "/T" + TStr + "/";
 
-    std::string outUAllSubDir = outDir +  "UAllPickle/";
-//    std::string out_xA_AllSubDir = outDir + "xA_All/";
-//    std::string out_xB_AllSubDir = outDir + "xB_All/";
-    std::string outLAllSubDir = outDir + "LAllPickle/";
+    std::string outUAllSubDir = outDir + "UAll/";
+    std::string out_xA_AllSubDir = outDir + "xA_All/";
+    std::string out_xB_AllSubDir = outDir + "xB_All/";
+    std::string outLAllSubDir=outDir+"LAll/";
 
 
     std::string outUAllBinSubDir = outDir + "UAllBin/";
     std::string out_xA_AllBinSubDir = outDir + "xA_AllBin/";
     std::string out_xB_AllBinSubDir = outDir + "xB_AllBin/";
-    std::string outLAllBinSubDir = outDir + "LAllBin/";
-
-    std::regex wrongRegex("wrong");
-    std::regex ErrRegex("Err");
-    std::regex lagRegex("lag=\\s*(\\d+)");
-    std::regex statisticRegex("statistic");
-    std::regex pRegex("p=([+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?)");
-    std::regex nDataPntRegex("numDataPoints=(\\d+)");
-
-    std::smatch matchUWrong;
-    std::smatch matchUErr;
-    std::smatch matchULag;
-    std::smatch matchStats;
-    std::smatch match_p;
-    std::smatch matchDataPntNum;
-
-
+    std::string outLAllBinSubDir=outDir+"LAllBin/";
     const auto tMCStart{std::chrono::steady_clock::now()};
-    while (active == true) {
+
+    std::cout << "remaining flush number: " << remainingFlushNum << std::endl;
+
+    for (int fls = 0; fls < remainingFlushNum; fls++) {
         std::vector<std::vector<double>> xA_AllPerFlush;
         std::vector<std::vector<double>> xB_AllPerFlush;
         std::vector<double> UAllPerFlush;
@@ -471,127 +472,251 @@ void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const 
             //propose a move
             arma::dcolvec xANext = arma::dcolvec(N);
             arma::dcolvec xBNext = arma::dcolvec(N);
-            double LNext = 0;
-            proposal(xACurr, xBCurr, LCurr, xANext, xBNext, LNext);
-            double r = acceptanceRatio(xACurr, xBCurr, LCurr, xANext, xBNext, LNext);
+            double LNext=0;
+            proposal(xACurr, xBCurr,LCurr, xANext, xBNext,LNext);
+
+            double r = acceptanceRatio(xACurr, xBCurr,LCurr, xANext, xBNext,LNext);
             double u = distUnif01(e2);
+            counter++;
             if (u <= r) {
                 xACurr = xANext;
                 xBCurr = xBNext;
-                LCurr = LNext;
-                UCurr = (*potFuncPtr)(xACurr, xBCurr, LCurr);
+                LCurr=LNext;
+                UCurr = (*potFuncPtr)(xACurr, xBCurr,LCurr);
             }
+
             xA_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xACurr));
             xB_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xBCurr));
             UAllPerFlush.push_back(UCurr);
             LAllPerFlush.push_back(LCurr);
 
-        }//end for loop in 1 flush
+        }//end for loop
         int loopEnd = loopStart + moveNumInOneFlush - 1;
         std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
-        std::string outUPickleFileName = outUAllSubDir + filenameMiddle + ".UAll.pkl";
-        std::string outUBinFileName = outUAllBinSubDir + filenameMiddle + "UAll.bin";
-//        this->saveVecToXML(outUFileName, UAllPerFlush);
-        save_vector_to_pickle(UAllPerFlush,outUPickleFileName);
-        this->saveVecToBin(outUBinFileName, UAllPerFlush);
 
-//        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
-//        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
-        std::string out_xABinFileName = out_xA_AllBinSubDir + filenameMiddle + ".xA_All.bin";
-        this->saveVecVecToBin(out_xABinFileName, xA_AllPerFlush);
+        std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
+        this->saveVecToXML(outUFileName, UAllPerFlush);
+        std::string outUBinFileName=outUAllBinSubDir+filenameMiddle+"UAll.bin";
+        this->saveVecToBin(outUBinFileName,UAllPerFlush);
 
-//        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
-//        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
-        std::string out_xBBinFileName = out_xB_AllBinSubDir + filenameMiddle + ".xB_All.bin";
-        this->saveVecVecToBin(out_xBBinFileName, xB_AllPerFlush);
+        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
+        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+        std::string out_xABinFileName=out_xA_AllBinSubDir+filenameMiddle+".xA_All.bin";
+        this->saveVecVecToBin(out_xABinFileName,xA_AllPerFlush);
 
 
-        std::string outLPickleFileName=outLAllSubDir+filenameMiddle+".LAll.pkl";
-//        this->saveVecToXML(outLFileName, LAllPerFlush);
-        save_vector_to_pickle(LAllPerFlush,outLPickleFileName);
-        std::string outLBinFileName = outLAllBinSubDir + filenameMiddle + ".LAll.bin";
-        this->saveVecToBin(outLBinFileName, LAllPerFlush);
+
+        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
+        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+        std::string out_xBBinFileName=out_xB_AllBinSubDir+filenameMiddle+".xB_All.bin";
+        this->saveVecVecToBin(out_xBBinFileName,xB_AllPerFlush);
+
+        std::string outLFileName=outLAllSubDir+filenameMiddle+".LAll.xml";
+        this->saveVecToXML(outLFileName,LAllPerFlush);
+        std::string outLBinFileName=outLAllBinSubDir+filenameMiddle+".LAll.bin";
+        this->saveVecToBin(outLBinFileName,LAllPerFlush);
+
 
         const auto tflushEnd{std::chrono::steady_clock::now()};
-
         const std::chrono::duration<double> elapsed_seconds{tflushEnd - tMCStart};
         std::cout << "flush " << fls << std::endl;
         std::cout << "time elapsed: " << elapsed_seconds.count() / 3600.0 << " h" << std::endl;
-        //communicate with python to decide continuing
-
-        std::string commandU = "python3 setCounter.py " + outUAllSubDir + " " + std::to_string(nCounterStart);
-        std::string resultU;
-        if (fls % 10000 == 0 and fls > 9999) {
-            try {
-                const auto tPyStart{std::chrono::steady_clock::now()};
-                resultU = this->execPython(commandU.c_str());
-                std::cout << "U message from python: " << resultU << std::endl;
-                const auto tPyEnd{std::chrono::steady_clock::now()};
-
-                const std::chrono::duration<double> elapsedpy_secondsAll{tPyEnd - tPyStart};
-                std::cout << "py time: " << elapsedpy_secondsAll.count()  << " s" << std::endl;
-
-            }
-            catch (const std::exception &e) {
-                std::cerr << "Error: " << e.what() << std::endl;
-                std::exit(10);
-            }
-            catch (...) {
-                // Handle any other exceptions
-                std::cerr << "Error" << std::endl;
-                std::exit(11);
-            }
-            // parse result
-            if (std::regex_search(resultU, matchUErr, ErrRegex)) {
-                std::cout << "error encountered" << std::endl;
-                std::exit(12);
-            }
-
-            if (std::regex_search(resultU, matchUWrong, wrongRegex)) {
-                std::exit(13);
-            }
-
-            if (std::regex_search(resultU, matchStats, statisticRegex)) {
-                std::regex_search(resultU, match_p, pRegex);
-                double pVal = std::stod(match_p.str(1));
-
-                std::regex_search(resultU, matchDataPntNum, nDataPntRegex);
-                int dataPntNum = std::stoi(matchDataPntNum.str(1));
-
-                std::regex_search(resultU, matchULag, lagRegex);
-                lag = std::stoi(matchULag.str(1));
-
-                if (pVal <= 0.1) {
-                    nCounterStart += 1000;
-//                    continue;
-                } else {
-                    if (dataPntNum >= dataNumTotal) {
-                        active = false;
-                    }
-
-                }
-
-                std::cout<<"flush "<<fls<<", nCounterStart="<<nCounterStart<<std::endl;
 
 
-            }//end of regex search
-
-
-        }//end if
-        fls++;
-    }//end while
+    }//end of flush loop
 
     std::ofstream outSummary(outDir + "summaryAfterEq.txt");
-
+    int loopTotal = counter;
     const auto tMCEnd{std::chrono::steady_clock::now()};
     const std::chrono::duration<double> elapsed_secondsAll{tMCEnd - tMCStart};
     outSummary << "total mc time: " << elapsed_secondsAll.count() / 3600.0 << " h" << std::endl;
+    outSummary << "total loop number: " << loopTotal << std::endl;
 
-    outSummary << "nCounterStart=" << std::to_string(nCounterStart) << std::endl;
-    outSummary<<"lag="<<lag<<std::endl;
-    outSummary.close();
+
 }//end of function executionMCAfterEq
+//void version1dLJPot2Atom::executionMCAfterEq(int &lag, const int &loopEq, const std::vector<double> &xA_init,
+//                                             const std::vector<double> &xB_init, const double &LInit) {
+//
+//
+//    bool active = true;
+//    int fls = 0;
+//    std::random_device rd;
+//    std::ranlux24_base e2(rd());
+//    std::uniform_real_distribution<> distUnif01(0, 1);//[0,1)
+//    arma::dcolvec xACurr(xA_init);
+//    arma::dcolvec xBCurr(xB_init);
+//    double LCurr = LInit;
+//    double UCurr = (*potFuncPtr)(xACurr, xBCurr, LCurr);
+//    //output directory
+//    std::ostringstream sObjT;
+//    sObjT << std::fixed;
+//    sObjT << std::setprecision(10);
+//    sObjT << T;
+//    std::string TStr = sObjT.str();
+//    std::string funcName = demangle(typeid(*potFuncPtr).name());
+//
+////    std::string  initFuncName= demangle(typeid(initFuncName).name());
+//    std::string outDir = "./version1Data/1d/func" + funcName + "/row" + std::to_string(rowNum) + "/T" + TStr + "/";
+//
+//    std::string outUAllSubDir = outDir +  "UAllPickle/";
+////    std::string out_xA_AllSubDir = outDir + "xA_All/";
+////    std::string out_xB_AllSubDir = outDir + "xB_All/";
+//    std::string outLAllSubDir = outDir + "LAllPickle/";
+//
+//
+//    std::string outUAllBinSubDir = outDir + "UAllBin/";
+//    std::string out_xA_AllBinSubDir = outDir + "xA_AllBin/";
+//    std::string out_xB_AllBinSubDir = outDir + "xB_AllBin/";
+//    std::string outLAllBinSubDir = outDir + "LAllBin/";
+//
+//    std::regex wrongRegex("wrong");
+//    std::regex ErrRegex("Err");
+//    std::regex lagRegex("lag=\\s*(\\d+)");
+//    std::regex statisticRegex("statistic");
+//    std::regex pRegex("p=([+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?)");
+//    std::regex nDataPntRegex("numDataPoints=(\\d+)");
+//
+//    std::smatch matchUWrong;
+//    std::smatch matchUErr;
+//    std::smatch matchULag;
+//    std::smatch matchStats;
+//    std::smatch match_p;
+//    std::smatch matchDataPntNum;
+//
+//
+//    const auto tMCStart{std::chrono::steady_clock::now()};
+//    while (active == true) {
+//        std::vector<std::vector<double>> xA_AllPerFlush;
+//        std::vector<std::vector<double>> xB_AllPerFlush;
+//        std::vector<double> UAllPerFlush;
+//        std::vector<double> LAllPerFlush;
+//        int loopStart = loopEq + fls * moveNumInOneFlush;
+//        for (int i = 0; i < moveNumInOneFlush; i++) {
+//            //propose a move
+//            arma::dcolvec xANext = arma::dcolvec(N);
+//            arma::dcolvec xBNext = arma::dcolvec(N);
+//            double LNext = 0;
+//            proposal(xACurr, xBCurr, LCurr, xANext, xBNext, LNext);
+//            double r = acceptanceRatio(xACurr, xBCurr, LCurr, xANext, xBNext, LNext);
+//            double u = distUnif01(e2);
+//            if (u <= r) {
+//                xACurr = xANext;
+//                xBCurr = xBNext;
+//                LCurr = LNext;
+//                UCurr = (*potFuncPtr)(xACurr, xBCurr, LCurr);
+//            }
+//            xA_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xACurr));
+//            xB_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xBCurr));
+//            UAllPerFlush.push_back(UCurr);
+//            LAllPerFlush.push_back(LCurr);
+//
+//        }//end for loop in 1 flush
+//        int loopEnd = loopStart + moveNumInOneFlush - 1;
+//        std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
+//                                     "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
+//        std::string outUPickleFileName = outUAllSubDir + filenameMiddle + ".UAll.pkl";
+//        std::string outUBinFileName = outUAllBinSubDir + filenameMiddle + "UAll.bin";
+////        this->saveVecToXML(outUFileName, UAllPerFlush);
+//        save_vector_to_pickle(UAllPerFlush,outUPickleFileName);
+//        this->saveVecToBin(outUBinFileName, UAllPerFlush);
+//
+////        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
+////        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+//        std::string out_xABinFileName = out_xA_AllBinSubDir + filenameMiddle + ".xA_All.bin";
+//        this->saveVecVecToBin(out_xABinFileName, xA_AllPerFlush);
+//
+////        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
+////        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+//        std::string out_xBBinFileName = out_xB_AllBinSubDir + filenameMiddle + ".xB_All.bin";
+//        this->saveVecVecToBin(out_xBBinFileName, xB_AllPerFlush);
+//
+//
+//        std::string outLPickleFileName=outLAllSubDir+filenameMiddle+".LAll.pkl";
+////        this->saveVecToXML(outLFileName, LAllPerFlush);
+//        save_vector_to_pickle(LAllPerFlush,outLPickleFileName);
+//        std::string outLBinFileName = outLAllBinSubDir + filenameMiddle + ".LAll.bin";
+//        this->saveVecToBin(outLBinFileName, LAllPerFlush);
+//
+//        const auto tflushEnd{std::chrono::steady_clock::now()};
+//
+//        const std::chrono::duration<double> elapsed_seconds{tflushEnd - tMCStart};
+//        std::cout << "flush " << fls << std::endl;
+//        std::cout << "time elapsed: " << elapsed_seconds.count() / 3600.0 << " h" << std::endl;
+//        //communicate with python to decide continuing
+//
+////        std::string commandU = "python3 setCounter.py " + outUAllSubDir + " " + std::to_string(nCounterStart);
+////        std::string resultU;
+////        if (fls % 10000 == 0 and fls > 9999) {
+////            try {
+////                const auto tPyStart{std::chrono::steady_clock::now()};
+////                resultU = this->execPython(commandU.c_str());
+////                std::cout << "U message from python: " << resultU << std::endl;
+////                const auto tPyEnd{std::chrono::steady_clock::now()};
+////
+////                const std::chrono::duration<double> elapsedpy_secondsAll{tPyEnd - tPyStart};
+////                std::cout << "py time: " << elapsedpy_secondsAll.count()  << " s" << std::endl;
+////
+////            }
+////            catch (const std::exception &e) {
+////                std::cerr << "Error: " << e.what() << std::endl;
+////                std::exit(10);
+////            }
+////            catch (...) {
+////                // Handle any other exceptions
+////                std::cerr << "Error" << std::endl;
+////                std::exit(11);
+////            }
+////            // parse result
+////            if (std::regex_search(resultU, matchUErr, ErrRegex)) {
+////                std::cout << "error encountered" << std::endl;
+////                std::exit(12);
+////            }
+////
+////            if (std::regex_search(resultU, matchUWrong, wrongRegex)) {
+////                std::exit(13);
+////            }
+////
+////            if (std::regex_search(resultU, matchStats, statisticRegex)) {
+////                std::regex_search(resultU, match_p, pRegex);
+////                double pVal = std::stod(match_p.str(1));
+////
+////                std::regex_search(resultU, matchDataPntNum, nDataPntRegex);
+////                int dataPntNum = std::stoi(matchDataPntNum.str(1));
+////
+////                std::regex_search(resultU, matchULag, lagRegex);
+////                lag = std::stoi(matchULag.str(1));
+////
+////                if (pVal <= 0.1) {
+////                    nCounterStart += 1000;
+//////                    continue;
+////                } else {
+////                    if (dataPntNum >= dataNumTotal) {
+////                        active = false;
+////                    }
+////
+////                }
+////
+////                std::cout<<"flush "<<fls<<", nCounterStart="<<nCounterStart<<std::endl;
+////
+////
+////            }//end of regex search
+////
+////
+////        }//end if
+//        fls++;
+//    }//end while
+//
+////    std::ofstream outSummary(outDir + "summaryAfterEq.txt");
+////
+////    const auto tMCEnd{std::chrono::steady_clock::now()};
+////    const std::chrono::duration<double> elapsed_secondsAll{tMCEnd - tMCStart};
+////    outSummary << "total mc time: " << elapsed_secondsAll.count() / 3600.0 << " h" << std::endl;
+////
+////    outSummary << "nCounterStart=" << std::to_string(nCounterStart) << std::endl;
+////    outSummary<<"lag="<<lag<<std::endl;
+////    outSummary.close();
+//}//end of function executionMCAfterEq
 
 ///
 /// @param rowNum row number

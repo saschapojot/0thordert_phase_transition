@@ -54,7 +54,7 @@ elif len(inSortedPKLFileNames)%3==1:
 else:
     pklFileToBeParsed=deepcopy(inSortedPKLFileNames[2:])
 
-lastFileNum=1000 if len(pklFileToBeParsed)>1500 else int(len(pklFileToBeParsed)/3*2)
+lastFileNum=2000 if len(pklFileToBeParsed)>3000 else int(len(pklFileToBeParsed)/3*2)
 
 pklFileToBeParsed=pklFileToBeParsed[-lastFileNum:]
 

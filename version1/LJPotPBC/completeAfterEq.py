@@ -48,7 +48,7 @@ for file in glob.glob(inPKLPath+"/*.pkl"):
     matchStart=re.search(r"loopStart(-?\d+(\.\d+)?)loopEnd",file)
     if matchStart:
         startVals.append(matchStart.group(1))
-
+print("finished fetching files")
 
 def str2int(valList):
     ret = [int(strTmp) for strTmp in valList]

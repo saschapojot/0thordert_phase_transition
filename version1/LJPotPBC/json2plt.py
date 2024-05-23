@@ -44,6 +44,7 @@ def pltU(oneTFile):
     with open(UFilePath, 'r') as fptr:
         data = json.load(fptr)
     UVec=np.array(data["U"])
+    print("T="+str(TVal)+", data num="+str(len(UVec)))
     meanU=np.mean(UVec)
 
     varU=np.var(UVec,ddof=1)
@@ -85,7 +86,7 @@ def pltU(oneTFile):
         return UMeanBlock
     fig=plt.figure(figsize=(20,20))
     fig.tight_layout(pad=5.0)
-    lengthVals=[5,10,20,40]
+    lengthVals=[2,5,7,10]
     for i in range(0,len(lengthVals)):
         l=lengthVals[i]
         UMeanBlk=meanPerBlock(l)
