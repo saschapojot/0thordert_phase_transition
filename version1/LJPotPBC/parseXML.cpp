@@ -149,9 +149,9 @@ void reader::UAndxFilesSelected() {
     fileNumSelected = static_cast<int>(std::ceil(loopNumToIncludeDB / moveNumInOneFlushDB));
     std::cout<<"fileNumSelected="<<fileNumSelected<<std::endl;
 
-    std::string cmd="python3 reCheckVec.py "+TDir+" "+std::to_string(fileNumSelected);
-    std::string msg=version1dLJPot2Atom::execPython(cmd.c_str());
-    std::cout<<"msg from recheck is "<<msg<<std::endl;
+//    std::string cmd="python3 reCheckVec.py "+TDir+" "+std::to_string(fileNumSelected);
+//    std::string msg=version1dLJPot2Atom::execPython(cmd.c_str());
+//    std::cout<<"msg from recheck is "<<msg<<std::endl;
 //    std::cout<<"fileNumSelected="<<fileNumSelected<<std::endl;
 
 

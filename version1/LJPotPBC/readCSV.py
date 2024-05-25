@@ -39,6 +39,13 @@ def dV1(r):
 def dV2(r):
     return -alpha2*p2*r**(-p2-1)+beta2*q2*r**(-q2-1)+4*r**3
 
+def dV(r):
+    return dV1(r)+dV2(r)
+
+sol=root(dV,1,method="broyden2",tol=1e-9)
+
+x=sol.x
+print("x="+str(x))
 
 # rValsAll=np.linspace(0.5,1.2,100)
 # dV1ValsAll=dV1(rValsAll)

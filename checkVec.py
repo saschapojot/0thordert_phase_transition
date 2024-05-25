@@ -74,15 +74,7 @@ for file in pklFileToBeParsed[1:]:
 
 vecValsCombined=np.array(vecValsCombined)
 
-#all values equal
-meanU=np.mean(vecValsCombined)
 
-diff=np.linalg.norm(vecValsCombined-meanU,ord=1)/len(vecValsCombined)
-
-
-if diff<1e-7:
-    print(sigStop+" same"+", fileNum="+str(lastFileNum))
-    exit()
 
 
 #check if the whole vector has the same value

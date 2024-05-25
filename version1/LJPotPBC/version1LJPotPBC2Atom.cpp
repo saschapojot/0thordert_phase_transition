@@ -124,7 +124,7 @@ void version1dLJPot2Atom::saveVecVecToXML(const std::string &filename, const std
 /// @param xALast last positions of atom A
 /// @param xBLast last positions of atom B
 /// @param LLast
-void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, bool &same, std::vector<double> &xALast,
+void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &loopTotal, bool &equilibrium, bool &same, std::vector<double> &xALast,
                                    std::vector<double> &xBLast, double &LLast) {
     std::random_device rd;
     std::ranlux24_base e2(rd());
@@ -220,8 +220,8 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
     std::smatch matchCounterStart;
 
 
-    int counter = 0;
-    int fls = 0;
+    unsigned long long counter = 0;
+    unsigned long long fls = 0;
     bool active = true;
     const auto tMCStart{std::chrono::steady_clock::now()};
     std::vector<double> last_xA;
@@ -303,7 +303,7 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if (fls % 4000 == 0 and fls>3999) {
+        if ((fls+1) % 4000 == 0 and fls>3999) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
@@ -413,21 +413,23 @@ void version1dLJPot2Atom::readEqMc(int &lag, int &loopTotal, bool &equilibrium, 
 /// @param xA_init xA from readEqMc
 /// @param xB_init xB from readEqMc
 /// @param LInit
-void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, const std::vector<double> &xA_init,
+void version1dLJPot2Atom::executionMCAfterEq(const unsigned long long &lag, const unsigned long long &loopEq, const std::vector<double> &xA_init,
                                              const std::vector<double> &xB_init, const double &LInit) {
 
-    int counter = 0;
-    int remainingDataNum = this->dataNumTotal - static_cast<int>(std::floor(lastFileNum * moveNumInOneFlush / lag));
-
-    int remainingLoopNum = remainingDataNum * lag;
-    if (remainingLoopNum <= 0) {
+    unsigned long long counter = 0;
+    if(this->dataNumTotal<= static_cast<unsigned  long long>(std::floor(lastFileNum * moveNumInOneFlush / lag)))
+    {
         return;
     }
+   unsigned long long remainingDataNum = this->dataNumTotal - static_cast<int>(std::floor(lastFileNum * moveNumInOneFlush / lag));
+
+    unsigned long long remainingLoopNum = remainingDataNum * lag;
+
     std::cout<<"remainingLoopNum="<<remainingLoopNum<<std::endl;
 
     double remainingLoopNumDB = static_cast<double>(remainingLoopNum);
     double remainingFlushNumDB = std::ceil(remainingLoopNumDB / moveNumInOneFlush);
-    int remainingFlushNum = static_cast<int>(remainingFlushNumDB);
+    int remainingFlushNum = static_cast<unsigned long long>(remainingFlushNumDB);
     std::random_device rd;
     std::ranlux24_base e2(rd());
     std::uniform_real_distribution<> distUnif01(0, 1);//[0,1)
@@ -462,13 +464,13 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
 
     std::cout << "remaining flush number: " << remainingFlushNum << std::endl;
 
-    for (int fls = 0; fls < remainingFlushNum; fls++) {
+    for (unsigned long long fls = 0; fls < remainingFlushNum; fls++) {
         std::vector<std::vector<double>> xA_AllPerFlush;
         std::vector<std::vector<double>> xB_AllPerFlush;
         std::vector<double> UAllPerFlush;
         std::vector<double> LAllPerFlush;
-        int loopStart = loopEq + fls * moveNumInOneFlush;
-        for (int i = 0; i < moveNumInOneFlush; i++) {
+        unsigned long long loopStart = loopEq + fls * moveNumInOneFlush;
+        for (unsigned long long i = 0; i < moveNumInOneFlush; i++) {
             //propose a move
             arma::dcolvec xANext = arma::dcolvec(N);
             arma::dcolvec xBNext = arma::dcolvec(N);
@@ -491,7 +493,7 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
             LAllPerFlush.push_back(LCurr);
 
         }//end for loop
-        int loopEnd = loopStart + moveNumInOneFlush - 1;
+        unsigned long long loopEnd = loopStart + moveNumInOneFlush - 1;
         std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
 
@@ -721,7 +723,7 @@ void version1dLJPot2Atom::executionMCAfterEq(const int &lag, const int &loopEq, 
 ///
 /// @param rowNum row number
 void version1dLJPot2Atom::parseCSV(const int &rowNum, double &alpha1, double &beta1, double &p1, double &q1,
-                                   double &alpha2, double &beta2, double &p2, double &q2) {
+                                   double &alpha2, double &beta2, double &p2, double &q2,double &r0) {
 
     std::string filePath = "./version1Input/1d/LJPotPBC/V1LJ2Atom1d.csv";
     std::string pyFile = "./version1/LJPotPBC/readCSV.py";
@@ -775,6 +777,16 @@ void version1dLJPot2Atom::parseCSV(const int &rowNum, double &alpha1, double &be
     std::smatch match_q2;
     if (std::regex_search(result, match_q2, pattern_q2)) {
         q2 = std::stod(match_q2[1].str());
+    }
+
+    std::regex pattern_x("x=([+-]?\\d+(\\.\\d+)?([eE][-+]?\\d+)?)");
+    std::smatch match_x;
+    if(std::regex_search(result,match_x,pattern_x)){
+        r0=std::stod(match_x[1].str());
+
+    }
+    if (r0<0){
+        r0=1;
     }
 
 

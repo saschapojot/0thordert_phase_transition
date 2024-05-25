@@ -42,17 +42,8 @@ namespace fs = boost::filesystem;
 
 class potentialFunction {
     //base class for potential function
-public:
-    virtual double operator()(const arma::dcolvec &xA, const arma::dcolvec &xB, const double &L) const = 0;
-
-    virtual ~ potentialFunction() {};
-
-};
-
-class LJPotPBC : public potentialFunction {
-public:
-    LJPotPBC(const double &alpha1Val, const double &alpha2Val, const double &beta1Val,
-          const double &beta2Val, const double &p1Val, const double &p2Val, const double &q1Val, const double &q2Val) {
+public:potentialFunction (const double &alpha1Val, const double &alpha2Val, const double &beta1Val,
+                          const double &beta2Val, const double &p1Val, const double &p2Val, const double &q1Val, const double &q2Val, const double &r0) {
 
         this->alpha1 = alpha1Val;
         this->alpha2 = alpha2Val;
@@ -62,8 +53,32 @@ public:
         this->p2 = p2Val;
         this->q1 = q1Val;
         this->q2 = q2Val;
+        this->r0=r0;
 
     }//end of constructor
+public:
+    virtual double operator()(const arma::dcolvec &xA, const arma::dcolvec &xB, const double &L) const = 0;
+    virtual double dVEst(const double &r, const unsigned long long  &N)const = 0;
+
+    virtual ~ potentialFunction() {};
+
+public:
+    double alpha1 = 0;
+    double alpha2 = 0;
+    double beta1 = 0;
+    double beta2 = 0;
+    double p1 = 0;
+    double p2 = 0;
+    double q1 = 0;
+    double q2 = 0;
+    double r0=0;// eq distance
+
+};
+
+class LJPotPBC : public potentialFunction {
+public:
+    LJPotPBC(const double &alpha1Val, const double &alpha2Val, const double &beta1Val,
+             const double &beta2Val, const double &p1Val, const double &p2Val, const double &q1Val, const double &q2Val, const double &r0Val) :potentialFunction(alpha1Val, alpha2Val, beta1Val, beta2Val, p1Val, p2Val, q1Val, q2Val, r0Val)  {}
 
 public:
     ///
@@ -127,6 +142,25 @@ public:
 
     }
 
+    double dV1(const double &r)const{
+        return -alpha1*p1*std::pow(r,(-p1-1))+beta1*q1*std::pow(r,(-q1-1))
+               +4*std::pow(r,3);
+
+    }
+
+    double dV2(const double &r)const{
+
+
+        return -alpha2*p2*std::pow(r,(-p2-1))+beta2*q2*std::pow(r,(-q2-1))
+               +4*std::pow(r,3);
+    }
+
+    double dVEst(const double &r, const unsigned long long &N)const{
+        double val=static_cast<double>(N)*(dV1(r)+ dV2(r));
+        return val;
+
+    }
+
 
 public:
     double alpha1 = 0;
@@ -137,23 +171,42 @@ public:
     double p2 = 0;
     double q1 = 0;
     double q2 = 0;
+    double r0=0;// eq distance
 
 };
 
 
 class version1dLJPot2Atom {
 public:
-    version1dLJPot2Atom(int rowNum, double temperature, double stepSize, int cellNum,
+    version1dLJPot2Atom(int rowNum, double temperature, const unsigned long long& cellNum,
                         const std::shared_ptr<potentialFunction> &funcPtr) {
+
         this->rowNum = rowNum;
         this->T = temperature;
         this->beta = 1 / T;
-        this->h = stepSize;
         this->potFuncPtr = funcPtr;
 
 //        this->diag=isDiag;
         this->N = cellNum;
-        this->stddev =h;// std::sqrt(2.0 * h);
+
+        //estimate step size
+
+
+        double rEst=funcPtr->r0;
+
+        std::cout<<"rEst="<<rEst<<std::endl;
+        double dValEst=2;
+
+        double stepSize=dValEst*T/(std::abs(funcPtr->dVEst(rEst,cellNum)));
+        this->h=0.005;//stepSize;
+
+
+        std::cout<<"h="<<h<<std::endl;
+        this->stddev =h;
+
+
+
+
     }
 
 
@@ -228,7 +281,7 @@ public:
     /// @param xALast last positions of atom A
     /// @param xBLast last positions of atom B
     /// @param LLast
-    void readEqMc(int &lag, int &loopTotal, bool &equilibrium, bool &same, std::vector<double> &xALast,
+    void readEqMc(unsigned long long &lag, unsigned long long &loopTotal, bool &equilibrium, bool &same, std::vector<double> &xALast,
                   std::vector<double> &xBLast, double &LLast);
 
     ///
@@ -237,7 +290,7 @@ public:
     /// @param xA_init xA from readEqMc
     /// @param xB_init xB from readEqMc
     /// @param LInit
-    void executionMCAfterEq(const int &lag, const int &loopEq, const std::vector<double> &xA_init,
+    void executionMCAfterEq(const unsigned long long &lag, const unsigned long long &loopEq, const std::vector<double> &xA_init,
                             const std::vector<double> &xB_init, const double &LInit);
 
     std::string demangle(const char *name) {
@@ -254,23 +307,27 @@ public:
     ///
     /// @param rowNum row number
     static void parseCSV(const int &rowNum, double &alpha1, double &beta1, double &p1, double &q1,
-                         double &alpha2, double &beta2, double &p2, double &q2);
+                         double &alpha2, double &beta2, double &p2, double &q2,double &r0);
 
     double T;// temperature
     double beta;
-    int moveNumInOneFlush = 3000;// flush the results to python every moveNumInOneFlush iterations
-    int flushMaxNum = 7000;
-    int dataNumTotal = 1000;
+    unsigned long long moveNumInOneFlush = 3000;// flush the results to python every moveNumInOneFlush iterations
+    unsigned long long flushMaxNum = 12000;
+    unsigned long long dataNumTotal = 2000;
     double h;// step size
 //    double a=5.3;//stiffness
 //    bool diag=true;// whether the quadratic form of energy is diagonal
-    int N;//number of unit cells
+    unsigned long long N;//number of unit cells
 
     double lastFileNum = 0;
     std::shared_ptr<potentialFunction> potFuncPtr;
     double stddev;
     int rowNum;
-    int nCounterStart=-1;
+    unsigned long long nCounterStart=0;
+    unsigned long long dataNumInEq=0;
+
+
+
 
 
 };
