@@ -26,43 +26,32 @@ std::vector<std::string> scanFiles(const int& rowNum){
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        std::cerr << "wrong number of arguments" << std::endl;
-        exit(1);
-    }
-    int rowNum = std::stoi(argv[1]);
-
-    std::vector<std::string> TDirs = scanFiles(rowNum);
-    for (const auto &s: TDirs) {
-        std::cout<<"file is "<<s<<std::endl;
-        std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
-        std::smatch T_match;
-        std::regex_search(s,T_match,TPattern);
-        if (std::stod(T_match.str(1))<=0.00099){
-            continue;
-        }
-
-        const auto tCStart{std::chrono::steady_clock::now()};
-        auto rd = reader(rowNum, s);
-        rd.searchFiles();
-        rd.sortFiles();
-
-        rd.parseSummary();
-        std::string smrAfterEq = rd.searchSummaryAfterEq();
-        rd.parseSummaryAfterEq(smrAfterEq);
-        rd.UAndxFilesSelected();
-        rd.parseUFiles();
-        rd.parsexAxB();
-        rd.data2json();
-        rd.colmeans();
-        rd.computeGAA();
-        rd.computeGAB();
-        rd.computeGBB();
-
+    if (argc != 3) {
+        std::cout << "wrong arguments" << std::endl;
+        std::exit(2);
     }
 
-//    arma::dmat x{0,1,2,3,4,5,6,7,8,9,10,11};
-//    x.reshape(4,3);
-//    std::cout<<"x="<<x.t()<<std::endl;
+
+    int rowNum=std::stoi(argv[1]);
+    int whichT=std::stoi(argv[2]);
+    const auto tStart{std::chrono::steady_clock::now()};
+    unsigned long long cellNum=10;
+    auto rd=reader(rowNum,whichT,cellNum);
+    rd.searchFiles();
+    rd.sortFiles();
+    rd.parseSummary();
+    rd.parseUFiles();
+    rd.parsexAxB();
+    rd.data2json();
+    rd.colmeans();
+    rd.computeGAA();
+    rd.computeGAB();
+    rd.computeGBB();
+
+
+
+
+
+
 
 }

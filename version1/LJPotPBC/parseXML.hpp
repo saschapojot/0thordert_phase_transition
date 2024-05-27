@@ -11,10 +11,15 @@
 class reader {
 
 public:
-    reader(const int &rowNum, const std::string &TDir) {
+    reader(const int &rowNum,const int &TInd, const unsigned long long& cellNum) {
         this->rowNum = rowNum;
 
-        this->TDir = "./version1Data/1d/funcLJPotPBC/row" + std::to_string(rowNum) + "/" + TDir;
+        this->cellNum=cellNum;
+        this->rowNum = rowNum;
+        this->TRoot = "./version1Data/1d/funcLJPotPBC/row" + std::to_string(rowNum) + "/";
+        std::vector<std::string >sortedTDirs= scanTDirs(TRoot);
+        this->TDir=TRoot+"/"+sortedTDirs[TInd]+"/";
+        std::cout<<"selected TDir="<<TDir<<std::endl;
         std::regex TPattern("T([+-]?\\d*(\\.\\d+)?)");
         std::smatch T_match;
         if (std::regex_search(TDir, T_match, TPattern)) {
@@ -59,9 +64,9 @@ public:
 
     void parseSummary();
 
-    std::string searchSummaryAfterEq();
+//    std::string searchSummaryAfterEq();
 
-    void parseSummaryAfterEq(const std::string &afterEqPath);
+//    void parseSummaryAfterEq(const std::string &afterEqPath);
 
     void UAndxFilesSelected();
 
@@ -107,36 +112,75 @@ public:
     }
 
 
+    ///
+    /// @param TPath path containing all T folders
+    /// @return T folder names sorted by T
+    std::vector<std::string> scanTDirs(const std::string &TPath){
+        std::vector<std::string> TDirs;
+        std::string searchPath = TPath;
+        std::string TPattern = "T([+-]?(\\d+(\\.\\d*)?|\\.\\d+)([eE][+-]?\\d+)?)";
+        std::vector<double> TValsAll;
+
+        if (fs::exists(searchPath) && fs::is_directory(searchPath)) {
+            for (const auto &entry : fs::directory_iterator(searchPath)) {
+                if (entry.path().filename().string()[0] == 'T') {
+                    TDirs.push_back(entry.path().filename().string());
+                    std::smatch matchT;
+                    if (std::regex_search(entry.path().filename().string(), matchT, std::regex(TPattern))) {
+                        double TVal = std::stod(matchT.str(1));
+                        TValsAll.push_back(TVal);
+                    }
+                }
+            }
+        }
+
+        std::vector<size_t> inds = argsort(TValsAll);
+        std::vector<std::string> sortedFiles;
+        for (const auto &i : inds) {
+            sortedFiles.push_back(TDirs[i]);
+        }
+
+        return sortedFiles;
+
+
+    }//end function scanTDirs
+
+
 public:
     int rowNum;
     std::string TDir;
+    std::string TRoot;
     std::string UPath;
     std::string xAPath;
     std::string xBPath;
 
 
-    int lag = 0;
-    int lastFileNum = 0;
+    unsigned long long lagEst = 0;
+//    int lastFileNum = 0;
     double T = 0;
     double beta = 0;
-    int moveNumInOneFlush = 3000;
-    int loopNumAfterEq = 0;
-    int cellNum = 0;
-    std::vector<std::string> UFilesSelected;
-    std::vector<std::string> xAFilesSelected;
-    std::vector<std::string> xBFilesSelected;
+//    int moveNumInOneFlush = 3000;
+//    int loopNumAfterEq = 0;
+    unsigned long long cellNum = 0;
+    unsigned long long startingFileNum=0;
+    unsigned long long maxDataNum=0;
+//    std::vector<std::string> UFilesSelected;
+//    std::vector<std::string> xAFilesSelected;
+//    std::vector<std::string> xBFilesSelected;
 
-    std::vector<double> xASelectedFlat;
-    std::vector<double> xBSelectedFlat;
-    std::vector<double> USelected;
+    std::vector<double> xAInFlat;
+    std::vector<double> xBInFlat;
+//    std::vector<double> USelected;
+    unsigned long long nCounterStart=0;
 
 
-//    arma::dcolvec armaU;
+
+    //    arma::dcolvec armaU;
     arma::dmat arma_xA;
     arma::dmat arma_xB;
 
-    std::vector<std::vector<double>> xAIn;
-    std::vector<std::vector<double>> xBIn;
+//    std::vector<std::vector<double>> xAIn;
+//    std::vector<std::vector<double>> xBIn;
     std::vector<double> UIn;
 
     std::vector<std::string> UFilesAll;

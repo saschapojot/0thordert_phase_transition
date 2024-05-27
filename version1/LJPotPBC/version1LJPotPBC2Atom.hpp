@@ -311,20 +311,21 @@ public:
 
     double T;// temperature
     double beta;
-    unsigned long long moveNumInOneFlush = 3000;// flush the results to python every moveNumInOneFlush iterations
-    unsigned long long flushMaxNum = 12000;
-    unsigned long long dataNumTotal = 2000;
+    static const unsigned long long moveNumInOneFlush = 3000*1000;// flush the results to python every moveNumInOneFlush iterations
+    static const unsigned long long flushMaxNum = 12;
+    static const unsigned long long dataNumTotal = 2000;
     double h;// step size
 //    double a=5.3;//stiffness
 //    bool diag=true;// whether the quadratic form of energy is diagonal
     unsigned long long N;//number of unit cells
 
-    double lastFileNum = 0;
+//    double lastFileNum = 0;
     std::shared_ptr<potentialFunction> potFuncPtr;
     double stddev;
     int rowNum;
     unsigned long long nCounterStart=0;
     unsigned long long dataNumInEq=0;
+    unsigned long long startingFileNum=0;
 
 
 

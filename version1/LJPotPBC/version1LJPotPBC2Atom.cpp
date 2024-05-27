@@ -82,9 +82,9 @@ double version1dLJPot2Atom::acceptanceRatio(const arma::dcolvec &xA, const arma:
     double numerator = -f(zA, zB, LNext);
 
     double denominator = -f(xA, xB,LCurr);
-    double UCurr=(*potFuncPtr)(xA, xB,LCurr);
-    double UNext=(*potFuncPtr)(zA, zB, LNext);
-    std::cout<<"UCurr="<<UCurr<<", UNext="<<UNext<<std::endl;
+//    double UCurr=(*potFuncPtr)(xA, xB,LCurr);
+//    double UNext=(*potFuncPtr)(zA, zB, LNext);
+//    std::cout<<"UCurr="<<UCurr<<", UNext="<<UNext<<std::endl;
     double ratio = std::exp(numerator - denominator);
 
     return std::min(1.0, ratio);
@@ -208,7 +208,10 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
     std::regex fileNumRegex("fileNum=\\s*(\\d+)");
     std::regex sameRegex("same");
     std::regex eqRegex("equilibrium");
-    std::regex ctStartRegex("nCountStart=\\s*(\\d+)");
+    std::regex ctStartRegex("nCounterStart=\\s*(\\d+)");
+    std::regex stfnRegex("startingFileNum=\\s*(\\d+)");
+    std::regex dataNumEqRegex("numDataPoints=\\s*(\\d+)");
+
 
     std::smatch matchUStop;
     std::smatch matchUWrong;
@@ -218,6 +221,9 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
     std::smatch matchUSame;
     std::smatch matchUEq;
     std::smatch matchCounterStart;
+    std::smatch matchStfn;
+    std::smatch matchDataNumEq;
+
 
 
     unsigned long long counter = 0;
@@ -230,9 +236,31 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
 
     while (fls < this->flushMaxNum and active == true) {
         std::vector<std::vector<double>> xA_AllPerFlush;
+        //init xA
+        xA_AllPerFlush.reserve(moveNumInOneFlush);
+        std::vector<double> initVecVal(N, 0);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            xA_AllPerFlush.push_back(initVecVal);
+        }
+
         std::vector<std::vector<double>> xB_AllPerFlush;
+        //init B
+        xB_AllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            xB_AllPerFlush.push_back(initVecVal);
+        }
         std::vector<double> UAllPerFlush;
+        //init U
+        UAllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            UAllPerFlush.push_back(0);
+        }
         std::vector<double> LAllPerFlush;
+        //init L
+        LAllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            LAllPerFlush.push_back(0);
+        }
 
         int loopStart = fls * moveNumInOneFlush;
 
@@ -255,10 +283,10 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
 //                std::cout<<"UNext="<<UCurr<<std::endl;
             }
 
-            xA_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xACurr));
-            xB_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xBCurr));
-            UAllPerFlush.push_back(UCurr);
-            LAllPerFlush.push_back(LCurr);
+            xA_AllPerFlush[i]=(arma::conv_to<std::vector<double>>::from(xACurr));
+            xB_AllPerFlush[i]=(arma::conv_to<std::vector<double>>::from(xBCurr));
+            UAllPerFlush[i]=(UCurr);
+            LAllPerFlush[i]=(LCurr);
 
 
         }//end for loop in 1 flush
@@ -303,7 +331,7 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
         std::string commandU = "python3 checkVec.py " + outUAllSubDir;
         std::string resultU;
 
-        if ((fls+1) % 4000 == 0 and fls>3999) {
+        if ((fls+1) % 1 == 0 and fls>=0) {
             try {
                 const auto tPyStart{std::chrono::steady_clock::now()};
                 resultU = this->execPython(commandU.c_str());
@@ -338,7 +366,7 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
                     same = true;
                     std::regex_search(resultU, matchFileNum, fileNumRegex);
                     std::string fileNumStr = matchFileNum.str(1);
-                    this->lastFileNum = std::stoi(fileNumStr);
+//                    this->lastFileNum = std::stoi(fileNumStr);
 
                     last_xA = xA_AllPerFlush[xA_AllPerFlush.size() - 1];
                     last_xB = xB_AllPerFlush[xB_AllPerFlush.size() - 1];
@@ -357,17 +385,29 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
                     int lagU = std::stoi(lagStrU);
                     std::cout << "lag=" << lagU << std::endl;
                     lag = lagU;
-                    std::regex_search(resultU, matchFileNum, fileNumRegex);
-                    std::string fileNumStr = matchFileNum.str(1);
-                    this->lastFileNum = std::stoi(fileNumStr);
+//                    std::regex_search(resultU, matchFileNum, fileNumRegex);
+//                    std::string fileNumStr = matchFileNum.str(1);
+//                    this->lastFileNum = std::stoi(fileNumStr);
 
-                    std::regex_search(resultU,matchCounterStart,ctStartRegex);
-                    this->nCounterStart=std::stoi(matchCounterStart.str(1));
+                    if(std::regex_search(resultU,matchCounterStart,ctStartRegex)) {
+                        this->nCounterStart = std::stoull(matchCounterStart.str(1));
+                    }
 
                     active = false;
                     last_xA = xA_AllPerFlush[xA_AllPerFlush.size() - 1];
                     last_xB = xB_AllPerFlush[xB_AllPerFlush.size() - 1];
                     last_L=LAllPerFlush[LAllPerFlush.size()-1];
+                    if(std::regex_search(resultU,matchStfn,stfnRegex)){
+                        this->startingFileNum=std::stoull(matchStfn.str(1));
+                    }
+
+                    if(std::regex_search(resultU,matchDataNumEq,dataNumEqRegex)){
+                        this->dataNumInEq=std::stoull(matchDataNumEq.str(1));
+
+                        std::cout<<"dataNumInEq="<<dataNumInEq<<std::endl;
+
+                    }
+
                 }
 
 
@@ -386,13 +426,16 @@ void version1dLJPot2Atom::readEqMc(unsigned long long &lag, unsigned long long &
     outSummary << "total mc time: " << elapsed_secondsAll.count() / 3600.0 << " h" << std::endl;
     outSummary << "total loop number: " << loopTotal << std::endl;
 
-    outSummary << "lastFileNum=" << lastFileNum << std::endl;
+//    outSummary << "lastFileNum=" << lastFileNum << std::endl;
     outSummary << "equilibrium reached: " << !active << std::endl;
     outSummary << "same: " << same << std::endl;
 
     outSummary << "lag=" << lag << std::endl;
     outSummary<<"step length="<<stddev<<std::endl;
     outSummary<<"nCounterStart="<<nCounterStart<<std::endl;
+    outSummary<<"startingFileNum="<<startingFileNum<<std::endl;
+    outSummary<<"collected number of data points: "<<dataNumInEq<<std::endl;
+
     outSummary.close();
 
     equilibrium = !active;
@@ -417,19 +460,19 @@ void version1dLJPot2Atom::executionMCAfterEq(const unsigned long long &lag, cons
                                              const std::vector<double> &xB_init, const double &LInit) {
 
     unsigned long long counter = 0;
-    if(this->dataNumTotal<= static_cast<unsigned  long long>(std::floor(lastFileNum * moveNumInOneFlush / lag)))
-    {
+    if (dataNumTotal <= dataNumInEq) {
         return;
     }
-   unsigned long long remainingDataNum = this->dataNumTotal - static_cast<int>(std::floor(lastFileNum * moveNumInOneFlush / lag));
+    unsigned long long remainingDataNum = this->dataNumTotal - this->dataNumInEq;
 
     unsigned long long remainingLoopNum = remainingDataNum * lag;
 
     std::cout<<"remainingLoopNum="<<remainingLoopNum<<std::endl;
 
     double remainingLoopNumDB = static_cast<double>(remainingLoopNum);
-    double remainingFlushNumDB = std::ceil(remainingLoopNumDB / moveNumInOneFlush);
-    int remainingFlushNum = static_cast<unsigned long long>(remainingFlushNumDB);
+    double remainingFlushNumDB = std::ceil(remainingLoopNumDB / static_cast<double>(moveNumInOneFlush));
+    unsigned long long remainingFlushNum = static_cast<unsigned long long>(remainingFlushNumDB);
+    std::cout<<"remaining flush: "<<remainingFlushNum<<std::endl;
     std::random_device rd;
     std::ranlux24_base e2(rd());
     std::uniform_real_distribution<> distUnif01(0, 1);//[0,1)
@@ -450,10 +493,10 @@ void version1dLJPot2Atom::executionMCAfterEq(const unsigned long long &lag, cons
 //    std::string  initFuncName= demangle(typeid(initFuncName).name());
     std::string outDir = "./version1Data/1d/func" + funcName +"/row"+std::to_string(rowNum)+ "/T" + TStr + "/";
 
-    std::string outUAllSubDir = outDir + "UAll/";
-    std::string out_xA_AllSubDir = outDir + "xA_All/";
-    std::string out_xB_AllSubDir = outDir + "xB_All/";
-    std::string outLAllSubDir=outDir+"LAll/";
+    std::string outUAllSubDir = outDir + "UAllPickle/";
+//    std::string out_xA_AllSubDir = outDir + "xA_All/";
+//    std::string out_xB_AllSubDir = outDir + "xB_All/";
+//    std::string outLAllSubDir=outDir+"LAll/";
 
 
     std::string outUAllBinSubDir = outDir + "UAllBin/";
@@ -466,9 +509,30 @@ void version1dLJPot2Atom::executionMCAfterEq(const unsigned long long &lag, cons
 
     for (unsigned long long fls = 0; fls < remainingFlushNum; fls++) {
         std::vector<std::vector<double>> xA_AllPerFlush;
+        //init xA
+        xA_AllPerFlush.reserve(moveNumInOneFlush);
+        std::vector<double> initVecVal(N, 0);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            xA_AllPerFlush.push_back(initVecVal);
+        }
         std::vector<std::vector<double>> xB_AllPerFlush;
+        //init B
+        xB_AllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            xB_AllPerFlush.push_back(initVecVal);
+        }
         std::vector<double> UAllPerFlush;
+        //init U
+        UAllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            UAllPerFlush.push_back(0);
+        }
         std::vector<double> LAllPerFlush;
+        //init L
+        LAllPerFlush.reserve(moveNumInOneFlush);
+        for(int i=0;i<moveNumInOneFlush;i++){
+            LAllPerFlush.push_back(0);
+        }
         unsigned long long loopStart = loopEq + fls * moveNumInOneFlush;
         for (unsigned long long i = 0; i < moveNumInOneFlush; i++) {
             //propose a move
@@ -487,35 +551,35 @@ void version1dLJPot2Atom::executionMCAfterEq(const unsigned long long &lag, cons
                 UCurr = (*potFuncPtr)(xACurr, xBCurr,LCurr);
             }
 
-            xA_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xACurr));
-            xB_AllPerFlush.push_back(arma::conv_to<std::vector<double>>::from(xBCurr));
-            UAllPerFlush.push_back(UCurr);
-            LAllPerFlush.push_back(LCurr);
+            xA_AllPerFlush[i]=(arma::conv_to<std::vector<double>>::from(xACurr));
+            xB_AllPerFlush[i]=(arma::conv_to<std::vector<double>>::from(xBCurr));
+            UAllPerFlush[i]=(UCurr);
+            LAllPerFlush[i]=(LCurr);
 
         }//end for loop
         unsigned long long loopEnd = loopStart + moveNumInOneFlush - 1;
         std::string filenameMiddle = "loopStart" + std::to_string(loopStart) +
                                      "loopEnd" + std::to_string(loopEnd) + "T" + TStr;
 
-        std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
-        this->saveVecToXML(outUFileName, UAllPerFlush);
+//        std::string outUFileName = outUAllSubDir + filenameMiddle + ".UAll.xml";
+//        this->saveVecToXML(outUFileName, UAllPerFlush);
         std::string outUBinFileName=outUAllBinSubDir+filenameMiddle+"UAll.bin";
         this->saveVecToBin(outUBinFileName,UAllPerFlush);
 
-        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
-        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
+//        std::string out_xAFileName = out_xA_AllSubDir + filenameMiddle + ".xA_All.xml";
+//        this->saveVecVecToXML(out_xAFileName, xA_AllPerFlush);
         std::string out_xABinFileName=out_xA_AllBinSubDir+filenameMiddle+".xA_All.bin";
         this->saveVecVecToBin(out_xABinFileName,xA_AllPerFlush);
 
 
 
-        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
-        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
+//        std::string out_xBFileName = out_xB_AllSubDir + filenameMiddle + ".xB_All.xml";
+//        this->saveVecVecToXML(out_xBFileName, xB_AllPerFlush);
         std::string out_xBBinFileName=out_xB_AllBinSubDir+filenameMiddle+".xB_All.bin";
         this->saveVecVecToBin(out_xBBinFileName,xB_AllPerFlush);
 
-        std::string outLFileName=outLAllSubDir+filenameMiddle+".LAll.xml";
-        this->saveVecToXML(outLFileName,LAllPerFlush);
+//        std::string outLFileName=outLAllSubDir+filenameMiddle+".LAll.xml";
+//        this->saveVecToXML(outLFileName,LAllPerFlush);
         std::string outLBinFileName=outLAllBinSubDir+filenameMiddle+".LAll.bin";
         this->saveVecToBin(outLBinFileName,LAllPerFlush);
 
