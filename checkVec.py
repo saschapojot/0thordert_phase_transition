@@ -45,18 +45,7 @@ start_inds = np.argsort(startVals)
 
 #sort files by starting value
 inSortedPKLFileNames=[inPKLFileNames[ind] for ind in start_inds]
-
-#ensure the file number is a multiple of 3
-if len(inSortedPKLFileNames)%3==0:
-    pklFileToBeParsed=deepcopy(inSortedPKLFileNames)
-elif len(inSortedPKLFileNames)%3==1:
-    pklFileToBeParsed=deepcopy(inSortedPKLFileNames[1:])
-else:
-    pklFileToBeParsed=deepcopy(inSortedPKLFileNames[2:])
-
-lastFileNum=2000 if len(pklFileToBeParsed)>3000 else int(len(pklFileToBeParsed)/3*2)
-
-pklFileToBeParsed=pklFileToBeParsed[-lastFileNum:]
+pklFileToBeParsed=inSortedPKLFileNames
 
 def parse1File(oneFileName):
     with open(oneFileName,"rb") as fptr:
@@ -70,62 +59,62 @@ vecValsCombined=parse1File(pklFileToBeParsed[0])
 
 for file in pklFileToBeParsed[1:]:
     vecValsCombined+=parse1File(file)
+print("len(vecValsCombined)="+str(len(vecValsCombined)))
+startingLoop=int(len(vecValsCombined)/3)
+vecValsCombined=np.array(vecValsCombined[startingLoop:])
 
 
-vecValsCombined=np.array(vecValsCombined)
 
 
-
-
-#check if the whole vector has the same value
-with warnings.catch_warnings():
-    warnings.filterwarnings("error")
-    try:
-        vecAutc=sm.tsa.acf(vecValsCombined)
-    except Warning as w:
-        print(sigStop+" same"+", fileNum="+str(lastFileNum))
-        exit()
-
-
-halfLength=int(len(vecValsCombined)/2)
-part0=vecValsCombined[:halfLength]
-part1=vecValsCombined[halfLength:]
-
-same0=False
-same1=False
-
-#check if the part0 has the same value
-with warnings.catch_warnings():
-    warnings.filterwarnings("error")
-    try:
-        autc0=sm.tsa.acf(part0)
-    except Warning as w:
-        same0=True
-
-
-#check if the part1 has the same value
-with warnings.catch_warnings():
-    warnings.filterwarnings("error")
-    try:
-        autc1=sm.tsa.acf(part1)
-    except Warning as w:
-        same1=True
-
-
-if same0 and same1:
-    print(sigStop+" same"+", fileNum="+str(lastFileNum))
-    exit()
-
-
-elif same0==True and same1==False:
-    # print("f0 True f1 False")
-    print(sigContinue)
-    exit()
-
-elif same0==False and same1==True:
-    # print("f0 False f1 True")
-    print(sigContinue)
-    exit()
+# #check if the whole vector has the same value
+# with warnings.catch_warnings():
+#     warnings.filterwarnings("error")
+#     try:
+#         vecAutc=sm.tsa.acf(vecValsCombined)
+#     except Warning as w:
+#         print(sigStop+" same"+", fileNum="+str(lastFileNum))
+#         exit()
+#
+#
+# halfLength=int(len(vecValsCombined)/2)
+# part0=vecValsCombined[:halfLength]
+# part1=vecValsCombined[halfLength:]
+#
+# same0=False
+# same1=False
+#
+# #check if the part0 has the same value
+# with warnings.catch_warnings():
+#     warnings.filterwarnings("error")
+#     try:
+#         autc0=sm.tsa.acf(part0)
+#     except Warning as w:
+#         same0=True
+#
+#
+# #check if the part1 has the same value
+# with warnings.catch_warnings():
+#     warnings.filterwarnings("error")
+#     try:
+#         autc1=sm.tsa.acf(part1)
+#     except Warning as w:
+#         same1=True
+#
+#
+# if same0 and same1:
+#     print(sigStop+" same"+", fileNum="+str(lastFileNum))
+#     exit()
+#
+#
+# elif same0==True and same1==False:
+#     # print("f0 True f1 False")
+#     print(sigContinue)
+#     exit()
+#
+# elif same0==False and same1==True:
+#     # print("f0 False f1 True")
+#     print(sigContinue)
+#     exit()
 
 def Jackknife(vec):
     """
@@ -171,8 +160,9 @@ else:
     numDataPoints=len(selectedFromPart0)+len(selectedFromPart1)
     print("len(selectedFromPart0)="+str(len(selectedFromPart0)))
     print("len(selectedFromPart1)="+str(len(selectedFromPart1)))
-    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value: "+str(result.pvalue)+"\n"\
-    +"fileNum="+str(lastFileNum)+", nCountStart="+str(len(inPKLFileNames)-lastFileNum)
+    msg="lag="+str(lagVal)+"\n"+"K-S statistic: "+str(result.statistic)+"\n"+"P-value: "+str(result.pvalue)+"\n" \
+        +"numDataPoints="+str(numDataPoints)+"\n"+"nCounterStart="+str(startingLoop)+"\n"\
+    +"startingFileNum="+str(len(pklFileToBeParsed))
     if result.pvalue>0.1:
         print(sigEq)
         print(msg)
